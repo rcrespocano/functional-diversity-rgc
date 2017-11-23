@@ -83,7 +83,7 @@ class NeuralNet(object):
 
                 if save:
                     units = units[0, :, :, :, :]
-                    np.savez(filename, units)
+                    np.save(filename, units)
 
                 if gif:
                     for u in range(units.shape[-1]):
