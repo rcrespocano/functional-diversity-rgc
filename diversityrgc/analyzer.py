@@ -8,7 +8,6 @@ from . import ovndata
 from . import neuralnet
 from . import log
 
-
 # Logger
 logger = log.get_logger(__name__)
 
@@ -30,6 +29,16 @@ def analyze(**kwargs):
 
     # Accumulated Pearson correlation coefficient
     logger.info('Calculate accumulated Pearson correlation coefficient')
+    pcc = calculate_correlation(files, out_folder)
+
+    logger.info('Plot Pearson correlation coefficient')
+    xaxis = np.arange(pcc.size)
+    plt.bar(xaxis, pcc)
+    plt.title('Pearson correlation coefficient')
+    plt.show()
+
+
+def calculate_correlation(files, out_folder):
     pcc_size = np.load(out_folder + files[0]).shape[-1]
     pcc = np.zeros(pcc_size)
     counter = 0
@@ -37,7 +46,7 @@ def analyze(**kwargs):
     for i in range(len(files)):
         filters_x = np.load(out_folder + files[i])
 
-        for j in range(i+1, len(files)):
+        for j in range(i + 1, len(files)):
             filters_y = np.load(out_folder + files[j])
 
             for k in range(filters_x.shape[-1]):
@@ -47,12 +56,7 @@ def analyze(**kwargs):
 
             counter += 1
 
-    pcc /= counter
-
-    xaxis = np.arange(pcc.size)
-    plt.bar(xaxis, pcc)
-    plt.title('Pearson correlation coefficient')
-    plt.show()
+    return pcc / counter
 
 
 def pearsoncc(x, y):
