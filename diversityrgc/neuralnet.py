@@ -44,7 +44,7 @@ class NeuralNet(object):
         self.model_endpoints = all_endpoints
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
-    def run(self, stimulus, sv, save=False, gif=False):
+    def run(self, stimulus, sv, nspikes=None, save=False, gif=False):
         with tf.Session() as sess:
             feed_dict = {}
             self.rgb_saver.restore(sess, self.checkpoint_path['rgb_imagenet'])
@@ -53,9 +53,11 @@ class NeuralNet(object):
             # Format video file for the pre-trained network
             indexes_spike = np.nonzero(sv)[0]
             number_of_spikes = len(indexes_spike)
+            nspikes = number_of_spikes if nspikes is None else nspikes
+
             for i, index in enumerate(indexes_spike):
-                info = 'Processing {}%'.format((i / number_of_spikes) * 100)
-                logger.info(info)
+                perc = '{:.2f}'.format((i / nspikes) * 100) + '%'
+                logger.info('Processing ' + perc)
 
                 # Format video file
                 video_file = np.zeros((self.video_length, self.image_size, self.image_size))
@@ -86,6 +88,9 @@ class NeuralNet(object):
                 if gif:
                     for u in range(units.shape[-1]):
                         imageio.mimwrite(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
+
+                if i >= nspikes:
+                    break
 
     @staticmethod
     def enlarge_image(reduced_image, image_width, image_height):

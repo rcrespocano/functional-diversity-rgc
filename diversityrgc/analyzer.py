@@ -12,4 +12,4 @@ def analyze(**kwargs):
     net = neuralnet.NeuralNet(temporal_size=kwargs['temporal_size'],
                               image_size=kwargs['neural_net_image_size'],
                               output_folder=kwargs['output_folder'])
-    net.run(stim, sv)
+    net.run(stim, sv, nspikes=10)
