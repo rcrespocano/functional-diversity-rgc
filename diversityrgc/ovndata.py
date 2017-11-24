@@ -92,15 +92,14 @@ def load_data(**kwargs):
         n = len(data_spikes[cond])
         sv[i] = 1 if (n > 0) else 0
 
-    # Stimulus dataset (reduce to the size of the spike vector)
-    stim_dataset_frames = stim_dataset_frames[:sv.shape[0]]
-
     # Spike vector size
     spike_vector_spikes_size = np.count_nonzero(sv)
-
     logger.info('Spike Vector (shape): %s', sv.shape)
     logger.info('Spike Vector spikes: %s', spike_vector_spikes_size)
     logger.info('Spike Vector non spikes: %s', np.where(sv == 0)[0].size)
+
+    # Stimulus dataset (reduce to the size of the spike vector)
+    stim_dataset_frames = stim_dataset_frames[:sv.shape[0]]
 
     # Crop frames (reduce to the receptive field zone of the cell)
     logger.info('Reduce frame to the receptive field zone of the cell')
