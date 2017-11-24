@@ -28,6 +28,7 @@ def analyze(**kwargs):
 
     # Analyze data
     files = [f for f in os.listdir(out_folder) if os.path.isfile(os.path.join(out_folder, f)) and f.endswith('.npy')]
+    files.sort(key=str.lower)
 
     # Accumulated Pearson correlation coefficient
     logger.info('Calculate accumulated Pearson correlation coefficient')
@@ -38,8 +39,13 @@ def analyze(**kwargs):
     save_plot_pearsoncc(pcc, out_folder)
 
     # Show pcc > 0.75
+    pcc_indexes = np.where(pcc > 0.75)[0]
     logger.info('Pearson correlation coefficient > 0.75')
-    logger.info(np.where(pcc > 0.75)[0])
+    logger.info(pcc_indexes)
+
+    # Save layer output of pcc > 0.75
+    logger.info('Save layers as gif files with Pearson correlation coefficient > 0.75')
+    net.run(stim, sv, nspikes=1, save=False, gif=True, gif_indexes=pcc_indexes)
 
 
 def calculate_correlation(files, out_folder):

@@ -27,6 +27,9 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
 
 
 def generate_gif(filename, array, fps=30):
+    array /= array.max()
+    array *= 255.0
+    array = array.astype('uint8')
     imageio.mimwrite(filename, array, fps=30)
 
 

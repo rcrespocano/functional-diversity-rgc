@@ -42,7 +42,7 @@ class NeuralNet(object):
         self.model_endpoints = all_endpoints
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
-    def run(self, stimulus, sv, nspikes=None, save=False, gif=False):
+    def run(self, stimulus, sv, nspikes=None, save=False, gif=False, gif_indexes=None):
         with tf.Session() as sess:
             feed_dict = {}
             self.rgb_saver.restore(sess, self.checkpoint_path['rgb_imagenet'])
@@ -77,7 +77,7 @@ class NeuralNet(object):
 
                 # Activations
                 layer = 'MaxPool3d_3a_3x3'
-                filename = self.output_folder + layer + '_' + str(i)
+                filename = self.output_folder + layer + '_' + (str(i).zfill(6))
                 units = sess.run(self.model_endpoints[layer], feed_dict=feed_dict)
 
                 if save:
@@ -85,8 +85,13 @@ class NeuralNet(object):
                     np.save(filename, units)
 
                 if gif:
-                    for u in range(units.shape[-1]):
-                        io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
+                    if gif_indexes is None:
+                        _iterator = range(units.shape[-1])
+                    else:
+                        _iterator = gif_indexes
 
-                if i >= nspikes:
+                    for u in _iterator:
+                            io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
+
+                if (i+1) >= nspikes:
                     break
