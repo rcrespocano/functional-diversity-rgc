@@ -5,7 +5,7 @@ import logging
 import os
 
 
-def create_logger(path, file_name='yarm.log'):
+def create_logger(path, file_name='log.log'):
     if not os.path.exists(path):
         os.makedirs(path)
 
