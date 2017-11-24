@@ -21,7 +21,7 @@ if __name__ == '__main__':
     # Parameters
     trigger_frames = 100
     frame_size = 56
-    temporal_size = 20
+    temporal_size = 30
     neural_net_image_size = 224
     number_of_spikes = 10
 
