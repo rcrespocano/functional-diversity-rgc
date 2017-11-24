@@ -2,6 +2,7 @@
 
 import imageio
 import cv2
+import os
 
 
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='*'):
@@ -35,3 +36,8 @@ def generate_gif(filename, array, fps=30):
 
 def enlarge_image(reduced_image, image_width, image_height):
     return cv2.resize(reduced_image, (image_width, image_height), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
+
+
+def create_folder(path):
+    if not os.path.exists(path):
+        os.makedirs(path)

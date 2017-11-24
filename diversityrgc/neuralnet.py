@@ -11,9 +11,8 @@ logger = log.get_logger(__name__)
 
 
 class NeuralNet(object):
-    def __init__(self, temporal_size, image_size, output_folder):
+    def __init__(self, temporal_size, image_size):
         self.temporal_size = temporal_size
-        self.output_folder = output_folder
         self.image_size = image_size
         self.video_length = int(temporal_size / 2)
         self.num_classes = 400
@@ -42,7 +41,7 @@ class NeuralNet(object):
         self.model_endpoints = all_endpoints
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
-    def run(self, stimulus, sv, nspikes=None, save=False, gif=False, gif_indexes=None):
+    def run(self, stimulus, sv, output_folder, nspikes=None, save=False, gif=False, gif_indexes=None):
         with tf.Session() as sess:
             feed_dict = {}
             self.rgb_saver.restore(sess, self.checkpoint_path['rgb_imagenet'])
@@ -77,7 +76,7 @@ class NeuralNet(object):
 
                 # Activations
                 layer = 'MaxPool3d_3a_3x3'
-                filename = self.output_folder + layer + '_' + (str(i).zfill(6))
+                filename = output_folder + layer + '_' + (str(i).zfill(6))
                 units = sess.run(self.model_endpoints[layer], feed_dict=feed_dict)
 
                 if save:
@@ -96,7 +95,7 @@ class NeuralNet(object):
                 if (i+1) >= nspikes:
                     break
 
-    def run_default_stim(self, gif_indexes):
+    def run_default_stim(self, gif_indexes, output_folder):
         # Load video file
         video_file = np.load('data/v_CricketShot_g04_c01_rgb.npy')
         video_file = video_file[:, :self.video_length, :, :, :]
@@ -111,7 +110,7 @@ class NeuralNet(object):
 
             # Activations
             layer = 'MaxPool3d_3a_3x3'
-            filename = self.output_folder + layer + '_DEFAULT'
+            filename = output_folder + layer + '_DEFAULT'
             units = sess.run(self.model_endpoints[layer], feed_dict=feed_dict)
 
             for u in gif_indexes:

@@ -5,7 +5,7 @@ import os
 import time
 import argparse
 import datetime
-from diversityrgc import log, analyzer
+from diversityrgc import log, analyzer, io_utils
 
 
 if __name__ == '__main__':
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
-    os.makedirs(output_folder)
+    io_utils.create_folder(output_folder)
 
     # Info
     info = 'Functional caracterization of retinal ganglion cell diversity tool.'
@@ -35,18 +35,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=info)
     parser.add_argument('--stim', metavar='stim', type=str, nargs='?', help='Input stimulus dataset')
     parser.add_argument('--bio', metavar='bio', type=str, nargs='?', help='Input biological data')
-    parser.add_argument('--celltype', metavar='celltype', type=int, nargs='?', help='Cell type')
-    parser.add_argument('--cellnum', metavar='cellnum', type=int, nargs='?', help='Cell number')
+    parser.add_argument('--cells', metavar='cells', nargs='+', help='Cells (type,num)')
     args = parser.parse_args()
 
     if args.stim is None:
         raise TypeError('ERROR: the arg --stim is mandatory [Input stimulus dataset]')
     if args.bio is None:
         raise TypeError('ERROR: the arg --bio is mandatory [Input biological dat]')
-    if args.celltype is None:
-        raise TypeError('ERROR: the arg --celltype is mandatory [Cell type]')
-    if args.cellnum is None:
-        raise TypeError('ERROR: the arg --cellnum is mandatory [Cell number]')
+    try:
+        args.cells = [tuple(map(int, s.split(',', maxsplit=1))) for s in args.cells]
+    except Exception:
+        raise TypeError('ERROR: the arg --cells is mandatory [Cells (type,num)]')
 
     # Logger
     log.create_logger(output_folder)
@@ -56,15 +55,13 @@ if __name__ == '__main__':
     logger.info('Parameters:')
     logger.info('> stim: %s', args.stim)
     logger.info('> bio: %s', args.bio)
-    logger.info('> celltype: %s', args.celltype)
-    logger.info('> cellnum: %s', args.cellnum)
+    logger.info('> cells: %s', args.cells)
 
     # Parameters
     kwargs = dict()
     kwargs['stim_dataset'] = args.stim
     kwargs['bio_dataset'] = args.bio
-    kwargs['cell_type_index'] = args.celltype
-    kwargs['cell_number'] = args.cellnum
+    kwargs['cells'] = args.cells
     kwargs['trigger_frames'] = trigger_frames
     kwargs['frame_size'] = frame_size
     kwargs['temporal_size'] = temporal_size
