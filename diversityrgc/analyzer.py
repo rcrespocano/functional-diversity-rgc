@@ -47,6 +47,10 @@ def analyze(**kwargs):
     logger.info('Save layers as gif files with Pearson correlation coefficient > 0.75')
     net.run(stim, sv, nspikes=1, save=False, gif=True, gif_indexes=pcc_indexes)
 
+    # Run default stimulus on Kinetics I3D model to save the same filters
+    logger.info('Run default stimulus on Kinetics I3D model to save the same filters')
+    net.run_default_stim(gif_indexes=pcc_indexes)
+
 
 def calculate_correlation(files, out_folder):
     pcc_size = np.load(out_folder + files[0]).shape[-1]

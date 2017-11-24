@@ -95,3 +95,24 @@ class NeuralNet(object):
 
                 if (i+1) >= nspikes:
                     break
+
+    def run_default_stim(self, gif_indexes):
+        # Load video file
+        video_file = np.load('data/v_CricketShot_g04_c01_rgb.npy')
+        video_file = video_file[:, :self.video_length, :, :, :]
+
+        with tf.Session() as sess:
+            feed_dict = {}
+            self.rgb_saver.restore(sess, self.checkpoint_path['rgb_imagenet'])
+
+            # Predict
+            feed_dict[self.rgb_input] = video_file
+            (_) = sess.run([self.model_logits, self.model_predictions], feed_dict=feed_dict)
+
+            # Activations
+            layer = 'MaxPool3d_3a_3x3'
+            filename = self.output_folder + layer + '_DEFAULT'
+            units = sess.run(self.model_endpoints[layer], feed_dict=feed_dict)
+
+            for u in gif_indexes:
+                io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
