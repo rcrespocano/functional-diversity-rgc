@@ -23,6 +23,7 @@ if __name__ == '__main__':
     frame_size = 56
     temporal_size = 20
     neural_net_image_size = 224
+    number_of_spikes = 10
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -69,6 +70,7 @@ if __name__ == '__main__':
     kwargs['temporal_size'] = temporal_size
     kwargs['neural_net_image_size'] = neural_net_image_size
     kwargs['output_folder'] = output_folder
+    kwargs['number_of_spikes'] = number_of_spikes
 
     # Analyze
     analyzer.analyze(**kwargs)

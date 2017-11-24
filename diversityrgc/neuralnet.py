@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import cv2
-import imageio
 import numpy as np
 import tensorflow as tf
 from . import i3d
 from . import log
-
+from . import io_utils
 
 # Logger
 logger = log.get_logger(__name__)
@@ -55,15 +53,16 @@ class NeuralNet(object):
             number_of_spikes = len(indexes_spike)
             nspikes = number_of_spikes if nspikes is None else nspikes
 
+            logger.info('Start simulation. Use each stimulus as input of the CNN.')
             for i, index in enumerate(indexes_spike):
-                perc = '{:.2f}'.format((i / nspikes) * 100) + '%'
-                logger.info('Processing ' + perc)
+                # Current percentage
+                io_utils.print_progress_bar(i, nspikes, prefix='Progress:', suffix='Complete', length=50)
 
                 # Format video file
                 video_file = np.zeros((self.video_length, self.image_size, self.image_size))
                 for j, k in enumerate(range(index - (self.temporal_size - 1), index + 1, 2)):
-                    image_one = NeuralNet.enlarge_image(stimulus[k], self.image_size, self.image_size)
-                    image_two = NeuralNet.enlarge_image(stimulus[k+1], self.image_size, self.image_size)
+                    image_one = io_utils.enlarge_image(stimulus[k], self.image_size, self.image_size)
+                    image_two = io_utils.enlarge_image(stimulus[k+1], self.image_size, self.image_size)
                     video_file[j] = np.mean(np.array([image_one, image_two]), axis=0)
 
                 # Color dimension
@@ -87,11 +86,7 @@ class NeuralNet(object):
 
                 if gif:
                     for u in range(units.shape[-1]):
-                        imageio.mimwrite(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
+                        io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
 
                 if i >= nspikes:
                     break
-
-    @staticmethod
-    def enlarge_image(reduced_image, image_width, image_height):
-        return cv2.resize(reduced_image, (image_width, image_height), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
