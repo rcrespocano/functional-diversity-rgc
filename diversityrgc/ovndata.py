@@ -109,8 +109,8 @@ def load_data(**kwargs):
         dataset_cropped_frames[i] = crop_frame(stim_dataset_frames[i], mean, subframe_size)
 
     # Normalize
-    logger.info('Normalize stimulus')
-    dataset_cropped_frames = (2 * dataset_cropped_frames.astype('float32') / 255.0) -1
+    logger.info('Normalize stimulus between -1 and 1')
+    dataset_cropped_frames = (2 * dataset_cropped_frames.astype('float32') / 255.0) - 1
 
     # Save STA
     logger.info('Calculate and save STA')
