@@ -25,10 +25,6 @@ logger = log.get_logger(__name__)
 
 def load_data(**kwargs):
     stim_dataset = kwargs['stim_dataset']
-    bio_dataset = kwargs['bio_dataset']
-    cell_type_index = kwargs['cell_type_index']
-    cell_number = kwargs['cell_number']
-    trigger_frames = kwargs['trigger_frames']
     frame_size = kwargs['frame_size']
     temporal_size = kwargs['temporal_size']
     output_folder = kwargs['output_folder']
@@ -39,6 +35,35 @@ def load_data(**kwargs):
     with h5py.File(stim_dataset) as f:
         stim_dataset_frames = f[DATASET_KEY][:]
         logger.info('Stimulus dataset raw (shape): %s', stim_dataset_frames.shape)
+
+    # Get spike vector of cell
+    sv, mean = get_spike_vector(**kwargs)
+
+    # Stimulus dataset (reduce to the size of the spike vector)
+    stim_dataset_frames = stim_dataset_frames[:sv.shape[0]]
+
+    # Crop frames (reduce to the receptive field zone of the cell)
+    logger.info('Reduce frame to the receptive field zone of the cell')
+    dataset_cropped_frames = np.zeros((stim_dataset_frames.shape[0], frame_size, frame_size))
+    for i in range(dataset_cropped_frames.shape[0]):
+        dataset_cropped_frames[i] = crop_frame(stim_dataset_frames[i], mean, subframe_size)
+
+    # Normalize
+    logger.info('Normalize stimulus between -1 and 1')
+    dataset_cropped_frames = (2 * dataset_cropped_frames.astype('float32') / 255.0) - 1
+
+    # Save STA
+    logger.info('Calculate and save STA')
+    save_sta(sv, dataset_cropped_frames, size=temporal_size, output_folder=output_folder)
+
+    return dataset_cropped_frames, sv
+
+
+def get_spike_vector(**kwargs):
+    bio_dataset = kwargs['bio_dataset']
+    cell_type_index = kwargs['cell_type_index']
+    cell_number = kwargs['cell_number']
+    trigger_frames = kwargs['trigger_frames']
 
     # Get labels/spikes/triggers of biodataset
     logger.info('Load bio dataset.')
@@ -98,24 +123,7 @@ def load_data(**kwargs):
     logger.info('Spike Vector spikes: %s', spike_vector_spikes_size)
     logger.info('Spike Vector non spikes: %s', np.where(sv == 0)[0].size)
 
-    # Stimulus dataset (reduce to the size of the spike vector)
-    stim_dataset_frames = stim_dataset_frames[:sv.shape[0]]
-
-    # Crop frames (reduce to the receptive field zone of the cell)
-    logger.info('Reduce frame to the receptive field zone of the cell')
-    dataset_cropped_frames = np.zeros((stim_dataset_frames.shape[0], frame_size, frame_size))
-    for i in range(dataset_cropped_frames.shape[0]):
-        dataset_cropped_frames[i] = crop_frame(stim_dataset_frames[i], mean, subframe_size)
-
-    # Normalize
-    logger.info('Normalize stimulus between -1 and 1')
-    dataset_cropped_frames = (2 * dataset_cropped_frames.astype('float32') / 255.0) - 1
-
-    # Save STA
-    logger.info('Calculate and save STA')
-    save_sta(sv, dataset_cropped_frames, size=temporal_size, output_folder=output_folder)
-
-    return dataset_cropped_frames, sv
+    return sv, mean
 
 
 def crop_frame(frame, mean, subframe_size):
