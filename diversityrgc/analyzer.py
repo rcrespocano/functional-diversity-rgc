@@ -38,11 +38,11 @@ def analyze(**kwargs):
 
         # Accumulated Pearson correlation coefficient
         logger.info('Calculate accumulated Pearson correlation coefficient')
-        pcc = calculate_correlation(files, out_folder)
+        pcc = __calculate_correlation(files, out_folder)
 
         # Save plot of the accumulated Pearson correlation coefficient
         logger.info('Save plot of Pearson correlation coefficient')
-        save_plot_pearsoncc(pcc, out_folder)
+        __save_plot_pearsoncc(pcc, out_folder)
 
         # Show pcc > 0.75
         pcc_indexes = np.where(pcc > 0.75)[0]
@@ -60,11 +60,42 @@ def analyze(**kwargs):
         del stim, sv
 
 
-def calculate_correlation(files, out_folder):
+def compare_correlated_filters(**kwargs):
+    folder = kwargs['folder']
+    filters = kwargs['filters']
+    layer_name = kwargs['layer_name']
+    output_folder = kwargs['output_folder']
+
+    cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0]]
+    cell_folders.sort(key=str.lower)
+    num_combinations = __calculate_combinations(len(cell_folders))
+
+    # Output: (num_filters, num_comparisons_filters_all_to_all)
+    output = np.zeros((len(filters), int(num_combinations)))
+
+    for index, filter in enumerate(filters):
+        counter = 0
+
+        for i in range(len(cell_folders)):
+            _x = np.load(cell_folders[i] + '/' + layer_name)[:, :, :, int(filter)].flatten()
+
+            for j in range(i + 1, len(cell_folders)):
+                _y = np.load(cell_folders[j] + '/' + layer_name)[:, :, :, int(filter)].flatten()
+                output[index][counter] = __pearsoncc(_x, _y)
+                counter += 1
+
+    # Save Pearson correlation coefficient for each filter comparison (in a different plot)
+    for index, filter in enumerate(filters):
+        __save_plot_pearsoncc(pcc=output[index], output_folder=output_folder, name='pcc_filter_'+str(filter)+'.pdf')
+
+    return output
+
+
+def __calculate_correlation(files, out_folder):
     pcc_size = np.load(out_folder + files[0]).shape[-1]
     pcc = np.zeros(pcc_size)
     counter = 0
-    num_combinations = calculate_combinations(len(files))
+    num_combinations = __calculate_combinations(len(files))
 
     for i in range(len(files)):
         filters_x = np.load(out_folder + files[i])
@@ -77,23 +108,23 @@ def calculate_correlation(files, out_folder):
             for k in range(filters_x.shape[-1]):
                 x = filters_x[:, :, :, k].flatten()
                 y = filters_y[:, :, :, k].flatten()
-                pcc[k] += pearsoncc(x, y)
+                pcc[k] += __pearsoncc(x, y)
 
     return pcc / counter
 
 
-def save_plot_pearsoncc(pcc, output_folder):
+def __save_plot_pearsoncc(pcc, output_folder, name='pcc.pdf'):
     x_axis = np.arange(pcc.size)
     plt.bar(x_axis, pcc)
     plt.title('Pearson correlation coefficient')
-    plt.savefig(output_folder + 'pcc.pdf')
+    plt.savefig(output_folder + name)
     plt.clf()
 
 
-def pearsoncc(x, y):
+def __pearsoncc(x, y):
     cc = stats.pearsonr(x, y)[0]
     return 0.0 if np.isnan(cc) else cc
 
 
-def calculate_combinations(n_elements):
+def __calculate_combinations(n_elements):
     return misc.comb(n_elements, 2)
