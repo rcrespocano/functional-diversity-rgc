@@ -19,7 +19,8 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_name = 'MaxPool3d_3a_3x3_000100.npy'
+    layer_name = 'MaxPool3d_3a_3x3_'
+    spikes = 1000
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -52,6 +53,7 @@ if __name__ == '__main__':
     kwargs['folder'] = args.folder
     kwargs['filters'] = args.filters
     kwargs['layer_name'] = layer_name
+    kwargs['spikes'] = spikes
     kwargs['output_folder'] = output_folder
 
     # Compare correlated filters

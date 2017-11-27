@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import random
 import numpy as np
 import scipy.stats as stats
 import scipy.misc as misc
@@ -62,8 +63,9 @@ def analyze(**kwargs):
 
 def compare_correlated_filters(**kwargs):
     folder = kwargs['folder']
-    filters = kwargs['filters']
     layer_name = kwargs['layer_name']
+    spikes = kwargs['spikes']
+    filters = kwargs['filters']
     output_folder = kwargs['output_folder']
 
     cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0]]
@@ -77,10 +79,12 @@ def compare_correlated_filters(**kwargs):
         counter = 0
 
         for i in range(len(cell_folders)):
-            _x = np.load(cell_folders[i] + '/' + layer_name)[:, :, :, int(filter)].flatten()
+            ln = layer_name + (str(random.randint(0, spikes)).zfill(6)) + '.npy'
+            _x = np.load(cell_folders[i] + '/' + ln)[:, :, :, int(filter)].flatten()
 
             for j in range(i + 1, len(cell_folders)):
-                _y = np.load(cell_folders[j] + '/' + layer_name)[:, :, :, int(filter)].flatten()
+                ln = layer_name + (str(random.randint(0, spikes)).zfill(6)) + '.npy'
+                _y = np.load(cell_folders[j] + '/' + ln)[:, :, :, int(filter)].flatten()
                 output[index][counter] = __pearsoncc(_x, _y)
                 counter += 1
 
