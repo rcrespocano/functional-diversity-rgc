@@ -19,8 +19,9 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_name = 'MaxPool3d_3a_3x3_'
-    spikes = 1000
+    layer_name = 'MaxPool3d_3a_3x3'
+    layer_shape = (8, 192)
+    cell_target = 'cell_76'
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -31,13 +32,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description=info)
     parser.add_argument('--folder', metavar='folder', type=str, nargs='?', help='Simulation output folder')
-    parser.add_argument('--filters', metavar='filters', nargs='+', help='Filters')
     args = parser.parse_args()
 
     if args.folder is None:
         raise TypeError('ERROR: the arg --folder is mandatory [Simulation output folder]')
-    if args.filters is None:
-        raise TypeError('ERROR: the arg --filters is mandatory [Filters]')
 
     # Logger
     log.create_logger(output_folder)
@@ -46,15 +44,13 @@ if __name__ == '__main__':
 
     logger.info('Parameters:')
     logger.info('> folder: %s', args.folder)
-    logger.info('> filters: %s', args.filters)
 
     # Parameters
     kwargs = dict()
     kwargs['folder'] = args.folder
-    kwargs['filters'] = args.filters
-    kwargs['layer_name'] = layer_name
-    kwargs['spikes'] = spikes
     kwargs['output_folder'] = output_folder
+    kwargs['layer_shape'] = layer_shape
+    kwargs['cell_target'] = cell_target
 
     # Compare correlated filters
     analyzer.compare_correlated_filters(**kwargs)
