@@ -43,7 +43,7 @@ class NeuralNet(object):
         self.model_endpoints = all_endpoints
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
-    def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=[13, 14], save=False, gif=False,
+    def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=(13, 14), save=False, gif=False,
             gif_indexes=None):
         with tf.Session() as sess:
             feed_dict = {}

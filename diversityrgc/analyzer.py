@@ -50,21 +50,6 @@ def analyze(**kwargs):
         logger.info('Save plot of Pearson correlation coefficient')
         __save_plot_pearsoncc(pcc, out_folder)
 
-        # Show pcc
-        pcc_indexes = np.where(pcc > kwargs['pcc'])[0]
-        logger.info('Pearson correlation coefficient > %s', kwargs['pcc'])
-        logger.info(pcc_indexes)
-
-        # Save layer output of pcc > defined value
-        logger.info('Save layers as gif files with Pearson correlation coefficient > %s', kwargs['pcc'])
-        net.run(stim, sv, out_folder, nspikes=1, save=False, gif=True, gif_indexes=pcc_indexes)
-
-        # Run default stimulus on Kinetics I3D model to save the same filters
-        logger.info('Run default stimulus on Kinetics I3D model to save the same filters')
-        net.run_default_stim(gif_indexes=pcc_indexes, output_folder=out_folder)
-
-        del stim, sv
-
 
 def compare_correlated_filters(**kwargs):
     folder = kwargs['folder']
