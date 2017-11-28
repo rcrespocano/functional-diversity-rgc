@@ -31,7 +31,7 @@ class NeuralNet(object):
         # RGB input has 3 channels.
         self.rgb_input = tf.placeholder(tf.float32, shape=(1, self.video_length, self.image_size, self.image_size, 3))
         with tf.variable_scope('RGB'):
-            rgb_model = i3d.InceptionI3d(self.num_classes, spatial_squeeze=True, final_endpoint='Logits')
+            rgb_model = i3d.InceptionI3d(self.num_classes, spatial_squeeze=True, final_endpoint=self.layer_name)
             rgb_logits, all_endpoints = rgb_model(self.rgb_input, is_training=False, dropout_keep_prob=1.0)
             rgb_variable_map = {}
             for variable in tf.global_variables():
