@@ -54,6 +54,7 @@ if __name__ == '__main__':
 
     # Compare correlated filters
     analyzer.compare_correlated_filters(**kwargs)
+    analyzer.plot_filters(**kwargs)
 
     diff_time = time.time() - start_time
     logger.info('The simulation has been successfully completed.')

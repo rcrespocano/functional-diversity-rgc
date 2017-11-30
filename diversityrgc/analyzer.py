@@ -34,9 +34,10 @@ def analyze(**kwargs):
 
         stim, sv = ovndata.load_data(**kwargs)
 
+
         # Run neural network
         net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=True)
-
+        '''
         # Analyze data
         files = [f for f in os.listdir(out_folder) if os.path.isfile(os.path.join(out_folder, f))
                  and f.endswith('.npy') and 'mean' not in f]
@@ -49,6 +50,7 @@ def analyze(**kwargs):
         # Save plot of the accumulated Pearson correlation coefficient
         logger.info('Save plot of Pearson correlation coefficient')
         __save_plot_pearsoncc(pcc, out_folder)
+        '''
 
 
 def compare_correlated_filters(**kwargs):
@@ -56,6 +58,8 @@ def compare_correlated_filters(**kwargs):
     output_folder = kwargs['output_folder']
     layer_shape = kwargs['layer_shape']
     cell_target = kwargs['cell_target']
+    rows = 5
+    cols = 5
 
     cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0] and cell_target not in x[0]]
     cell_folders.sort(key=str.lower)
@@ -94,13 +98,39 @@ def compare_correlated_filters(**kwargs):
             _y = data[n, :, k]
             pcc_values[n-1][k] = __pearsoncc(data[0, :, k], data[n, :, k])
 
-    f, axarr = plt.subplots(2, 2)
+    logger.info('PCC less than 0.5')
+    for i in range(len(pcc_values)):
+        logger.info('Comparison %s', i)
+        logger.info(np.where([pcc_values[i] < 0.5])[1])
+
+    f, axarr = plt.subplots(rows, cols)
     for i in range(pcc_values.shape[0]):
         x_axis = np.arange(pcc_values[i].size)
-        x = i // 2
-        y = i % 2
+        x = i // rows
+        y = i % cols
         axarr[x, y].bar(x_axis, pcc_values[i])
     plt.savefig(output_folder + 'pcc_in_pairs.pdf')
+    plt.clf()
+
+
+def plot_filters(title=False, **kwargs):
+    folder = kwargs['folder']
+    output_folder = kwargs['output_folder']
+
+    cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0]]
+    cell_folders.sort(key=str.lower)
+
+    f, axarr = plt.subplots(nrows=len(cell_folders), ncols=1)
+
+    for i, f in enumerate(cell_folders):
+        logger.info('Load filter from [' + f + ']')
+        data = np.load(f + '/mean.npy')
+        if title:
+            axarr[i].set_title(f)
+        axarr[i].axis('off')
+        axarr[i].imshow(data)
+
+    plt.savefig(output_folder + 'filters_colormap.pdf')
     plt.clf()
 
 
