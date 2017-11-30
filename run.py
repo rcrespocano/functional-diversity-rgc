@@ -23,7 +23,7 @@ if __name__ == '__main__':
     frame_size = 56
     temporal_size = 30
     neural_net_image_size = 224
-    number_of_spikes = 10
+    number_of_spikes = 1000
     layer_name = 'MaxPool3d_3a_3x3'
     layer_shape = (8, 192)
 
