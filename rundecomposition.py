@@ -19,8 +19,7 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_shapes = [(8, 64), (8, 192)]
-    cell_target = 'cell_76'
+    layer_name = 'MaxPool3d_2a_3x3'
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -48,12 +47,10 @@ if __name__ == '__main__':
     kwargs = dict()
     kwargs['folder'] = args.folder
     kwargs['output_folder'] = output_folder
-    kwargs['layer_shapes'] = layer_shapes
-    kwargs['cell_target'] = cell_target
+    kwargs['layer_name'] = layer_name
 
-    # Compare correlated filters
-    analyzer.compare_correlated_filters(**kwargs)
-    analyzer.plot_filters(**kwargs)
+    # Analyze decomposition
+    analyzer.analyze_principal_components(**kwargs)
 
     diff_time = time.time() - start_time
     logger.info('The simulation has been successfully completed.')

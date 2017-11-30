@@ -11,11 +11,11 @@ logger = log.get_logger(__name__)
 
 
 class NeuralNet(object):
-    def __init__(self, temporal_size, image_size, layer_name, layer_shape):
+    def __init__(self, temporal_size, image_size, layer_names, layer_shapes):
         self.temporal_size = temporal_size
         self.image_size = image_size
-        self.layer_name = layer_name
-        self.layer_shape = layer_shape
+        self.layer_names = layer_names
+        self.layer_shapes = layer_shapes
         self.video_length = int(temporal_size / 2)
         self.num_classes = 400
         self.label_map_path = 'data/label_map.txt'
@@ -31,7 +31,7 @@ class NeuralNet(object):
         # RGB input has 3 channels.
         self.rgb_input = tf.placeholder(tf.float32, shape=(1, self.video_length, self.image_size, self.image_size, 3))
         with tf.variable_scope('RGB'):
-            rgb_model = i3d.InceptionI3d(self.num_classes, spatial_squeeze=True, final_endpoint=self.layer_name)
+            rgb_model = i3d.InceptionI3d(self.num_classes, spatial_squeeze=True, final_endpoint=self.layer_names[-1])
             rgb_logits, all_endpoints = rgb_model(self.rgb_input, is_training=False, dropout_keep_prob=1.0)
             rgb_variable_map = {}
             for variable in tf.global_variables():
@@ -43,7 +43,7 @@ class NeuralNet(object):
         self.model_endpoints = all_endpoints
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
-    def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=(13, 14), save=False, gif=False,
+    def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=(27, 28), save=False, gif=False,
             gif_indexes=None):
         with tf.Session() as sess:
             feed_dict = {}
@@ -55,7 +55,8 @@ class NeuralNet(object):
             nspikes = len(indexes_spike) if nspikes is None else nspikes
 
             logger.info('Start simulation. Use each stimulus as input of the CNN.')
-            cell_filters = np.zeros((nspikes,) + self.layer_shape)
+            cell_filters = [(np.zeros((nspikes,) + x)) for x in self.layer_shapes]
+
             for i, index in enumerate(indexes_spike[start:start+nspikes]):
                 # Current percentage
                 io_utils.print_progress_bar(i, nspikes, prefix='Progress:', suffix='Complete', length=50)
@@ -78,27 +79,29 @@ class NeuralNet(object):
                 (_) = sess.run([self.model_logits, self.model_predictions], feed_dict=feed_dict)
 
                 # Activations
-                filename = output_folder + self.layer_name + '_' + (str(i).zfill(6))
-                units = sess.run(self.model_endpoints[self.layer_name], feed_dict=feed_dict)
+                for _idx, _layer in enumerate(self.layer_names):
+                    filename = output_folder + _layer + '_' + (str(i).zfill(6))
+                    units = sess.run(self.model_endpoints[_layer], feed_dict=feed_dict)
 
-                if save:
-                    units = units[0, :, center_range[0]:center_range[1]+1, center_range[0]:center_range[1]+1, :]
-                    units = np.mean(units, axis=(1, 2))
-                    np.save(filename, units)
-                    cell_filters[i] = units
+                    if save:
+                        units = units[0, :, center_range[0]:center_range[1]+1, center_range[0]:center_range[1]+1, :]
+                        units = np.mean(units, axis=(1, 2))
+                        np.save(filename, units)
+                        cell_filters[_idx][i] = units
 
-                if gif:
-                    if gif_indexes is None:
-                        _iterator = range(units.shape[-1])
-                    else:
-                        _iterator = gif_indexes
+                    if gif:
+                        if gif_indexes is None:
+                            _iterator = range(units.shape[-1])
+                        else:
+                            _iterator = gif_indexes
 
-                    for u in _iterator:
-                            io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
+                        for u in _iterator:
+                                io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
 
             if save:
-                cell_filters = np.mean(cell_filters, axis=0)
-                np.save(output_folder + 'mean', cell_filters)
+                for k, feature_map in enumerate(cell_filters):
+                    fm = np.mean(feature_map, axis=0)
+                    np.save(output_folder + 'mean_' + str(k), fm)
 
     def run_default_stim(self, gif_indexes, output_folder):
         # Load video file

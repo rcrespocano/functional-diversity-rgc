@@ -24,8 +24,8 @@ if __name__ == '__main__':
     temporal_size = 30
     neural_net_image_size = 224
     number_of_spikes = 1000
-    layer_name = 'MaxPool3d_3a_3x3'
-    layer_shape = (8, 192)
+    layer_names = ['MaxPool3d_2a_3x3', 'Conv3d_2c_3x3']
+    layer_shapes = [(8, 64), (8, 192)]
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -70,8 +70,8 @@ if __name__ == '__main__':
     kwargs['neural_net_image_size'] = neural_net_image_size
     kwargs['output_folder'] = output_folder
     kwargs['number_of_spikes'] = number_of_spikes
-    kwargs['layer_name'] = layer_name
-    kwargs['layer_shape'] = layer_shape
+    kwargs['layer_names'] = layer_names
+    kwargs['layer_shapes'] = layer_shapes
 
     # Analyze
     analyzer.analyze(**kwargs)
