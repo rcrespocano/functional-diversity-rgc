@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from . import i3d
 from . import log
@@ -16,7 +17,7 @@ class NeuralNet(object):
         self.image_size = image_size
         self.layer_names = layer_names
         self.layer_shapes = layer_shapes
-        self.video_length = int(temporal_size / 2)
+        self.video_length = int(temporal_size)
         self.num_classes = 400
         self.label_map_path = 'data/label_map.txt'
         self.checkpoint_path = {'rgb_imagenet': 'data/checkpoints/rgb_imagenet/model.ckpt'}
@@ -43,7 +44,7 @@ class NeuralNet(object):
         self.model_endpoints = all_endpoints
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
-    def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=(27, 28), save=False, gif=False,
+    def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=(55, 56), save=False, gif=False,
             gif_indexes=None):
         with tf.Session() as sess:
             feed_dict = {}
@@ -52,21 +53,31 @@ class NeuralNet(object):
 
             # Format video file for the pre-trained network
             indexes_spike = np.nonzero(sv)[0]
+            indexes_spike = indexes_spike[indexes_spike > self.temporal_size]
+
+            # Number of spikes
             nspikes = len(indexes_spike) if nspikes is None else nspikes
+
+            # Range
+            indexes_spike = indexes_spike[start:start + nspikes]
 
             logger.info('Start simulation. Use each stimulus as input of the CNN.')
             cell_filters = [(np.zeros((nspikes,) + x)) for x in self.layer_shapes]
 
-            for i, index in enumerate(indexes_spike[start:start+nspikes]):
+            # STA
+            sta = np.zeros((self.temporal_size, self.image_size, self.image_size))
+            sta_counter = 0
+
+            for i, index in enumerate(indexes_spike):
                 # Current percentage
                 io_utils.print_progress_bar(i, nspikes, prefix='Progress:', suffix='Complete', length=50)
 
                 # Format video file
                 video_file = np.zeros((self.video_length, self.image_size, self.image_size))
-                for j, k in enumerate(range(index - (self.temporal_size - 1), index + 1, 2)):
-                    image_one = io_utils.enlarge_image(stimulus[k], self.image_size, self.image_size)
-                    image_two = io_utils.enlarge_image(stimulus[k+1], self.image_size, self.image_size)
-                    video_file[j] = np.mean(np.array([image_one, image_two]), axis=0)
+                for j, k in enumerate(range(index - (self.temporal_size - 1), index + 1)):
+                    video_file[j] = io_utils.enlarge_image(stimulus[k], self.image_size, self.image_size)
+                    sta[j] += video_file[j]
+                    sta_counter += 1
 
                 # Color dimension
                 video_file = video_file[..., np.newaxis] * np.ones(3)

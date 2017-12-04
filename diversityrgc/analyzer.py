@@ -58,8 +58,8 @@ def compare_correlated_filters(**kwargs):
     output_folder = kwargs['output_folder']
     layer_shapes = kwargs['layer_shapes']
     cell_target = kwargs['cell_target']
-    rows = 3
-    cols = 3
+    rows = 2
+    cols = 2
 
     cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0] and cell_target not in x[0]]
     cell_folders.sort(key=str.lower)
@@ -80,6 +80,7 @@ def compare_correlated_filters(**kwargs):
         data = np.empty((num_cells,) + layer_shape)
         data[0] = np.load(cell_target_folder[0] + '/' + mean_file)
         for i in range(1, num_cells):
+            logger.info('> Data i=' + str(i) + ' --> ' + cell_folders[i-1])
             data[i] = np.load(cell_folders[i-1] + '/' + mean_file)
 
         pcc = np.empty(data.shape[-1])
@@ -93,7 +94,7 @@ def compare_correlated_filters(**kwargs):
 
             pcc[k] = _pcc / num_combinations
 
-        __save_plot_pearsoncc(pcc=pcc, output_folder=output_folder, name='pcc_all_filters' + str(_idx) + '.pdf')
+        __save_plot_pearsoncc(pcc=pcc, output_folder=output_folder, name='pcc_all_filters_' + str(_idx) + '.pdf')
 
         # Save correlation only with the target cell
         logger.info('Save correlation only with the target cell')
@@ -112,14 +113,14 @@ def compare_correlated_filters(**kwargs):
         f, axarr = plt.subplots(rows, cols)
         for i in range(pcc_values.shape[0]):
             x_axis = np.arange(pcc_values[i].size)
-            x = i // rows
-            y = i % rows
+            x = i // cols
+            y = i % cols
             axarr[x, y].bar(x_axis, pcc_values[i])
-        plt.savefig(output_folder + 'pcc_in_pairs' + str(_idx) + '.pdf')
+        plt.savefig(output_folder + 'pcc_in_pairs_' + str(_idx) + '.pdf')
         plt.clf()
 
 
-def plot_filters(title=False, **kwargs):
+def plot_filters(title=True, **kwargs):
     folder = kwargs['folder']
     output_folder = kwargs['output_folder']
     layer_shapes = kwargs['layer_shapes']
@@ -140,30 +141,34 @@ def plot_filters(title=False, **kwargs):
             axarr[i].imshow(data)
             plt.imshow(data)
 
-        plt.savefig(output_folder + 'filters_colormap' + str(_idx) + '.pdf')
+        plt.savefig(output_folder + 'filters_colormap_' + str(_idx) + '.pdf')
         plt.clf()
 
 
 def analyze_principal_components(name=None, **kwargs):
-    folder = kwargs['folder']
+    root_folder = kwargs['folder']
     layer_name = kwargs['layer_name']
     output_folder = kwargs['output_folder']
 
-    files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
-             and 'mean' not in f and layer_name in f]
-    files.sort(key=str.lower)
+    cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
 
-    for i, f in enumerate(files):
-        data = np.load(folder + f)
-        pca = PCA(2)
-        projected = pca.fit_transform(data.T)
-        plt.scatter(projected[:, 0], projected[:, 1])
-        plt.xlabel('Component 1')
-        plt.ylabel('Component 2')
+    for _idx, folder in enumerate(cell_folders):
+        files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
+                 and 'mean' not in f and layer_name in f]
+        files.sort(key=str.lower)
 
-    plt.title(folder)
-    plt.savefig(output_folder + 'pca.png')
-    plt.clf()
+        for i, f in enumerate(files):
+            data = np.load(folder + '/' + f)
+            pca = PCA(2)
+            projected = pca.fit_transform(data.T)
+            plt.scatter(projected[:, 0], projected[:, 1])
+            plt.title(f)
+            plt.xlabel('Component 1')
+            plt.ylabel('Component 2')
+
+        plt.title(folder)
+        plt.savefig(output_folder + 'pca_' + str(_idx) + '.png')
+        plt.clf()
 
 
 def __calculate_correlation(files, out_folder):
@@ -232,6 +237,6 @@ def __old_deprecated_compare_correlated_filters(**kwargs):
 
     # Save Pearson correlation coefficient for each filter comparison (in a different plot)
     for index, filter in enumerate(filters):
-        __save_plot_pearsoncc(pcc=output[index], output_folder=output_folder, name='pcc_filter_'+str(filter)+'.pdf')
+        __save_plot_pearsoncc(pcc=output[index], output_folder=output_folder, name='pcc_filter_' + str(filter) + '.pdf')
 
     return output

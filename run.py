@@ -23,9 +23,9 @@ if __name__ == '__main__':
     frame_size = 56
     temporal_size = 30
     neural_net_image_size = 224
-    number_of_spikes = 1000
-    layer_names = ['MaxPool3d_2a_3x3', 'Conv3d_2c_3x3']
-    layer_shapes = [(8, 64), (8, 192)]
+    number_of_spikes = None
+    layer_names = ['Conv3d_1a_7x7']
+    layer_shapes = [(15, 64)]
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'

@@ -53,8 +53,12 @@ def load_data(**kwargs):
     dataset_cropped_frames = (2 * dataset_cropped_frames.astype('float32') / 255.0) - 1
 
     # Save STA
-    logger.info('Calculate and save STA')
-    save_sta(sv, dataset_cropped_frames, size=temporal_size, output_folder=output_folder)
+    try:
+        logger.info('Calculate and save STA')
+        save_sta(sv, dataset_cropped_frames, size=temporal_size, output_folder=output_folder)
+        save_sta2(sv, stim_dataset_frames, size=temporal_size, output_folder=output_folder)
+    except Exception:
+        pass
 
     return dataset_cropped_frames, sv
 
@@ -160,6 +164,7 @@ def save_sta(spike_vector, stimulus, size, output_folder, name='sta'):
 
     # Get indexes of spikes in spike vector
     indexes = np.nonzero(spike_vector)[0]
+    indexes = indexes[indexes > size]
 
     # Calculate STA
     plot_frames = []
@@ -185,6 +190,38 @@ def save_sta(spike_vector, stimulus, size, output_folder, name='sta'):
         x = i // sta_plot_cols
         y = i % sta_plot_cols
         axarr[x, y].imshow(plot_frames[i], cmap='gray')
+
+    plt.savefig(output_folder + name + '.pdf')
+    plt.clf()
+
+
+def save_sta2(spike_vector, stim_dataset_frames, size, output_folder, name='sta2'):
+    sta_plot_cols = 10
+    sta_plot_rows = (size // sta_plot_cols) + 1
+
+    # Get indexes of spikes in spike vector
+    indexes = np.nonzero(spike_vector)[0]
+    indexes = indexes[indexes > size]
+
+    # Calculate STA
+    sta_frames = np.zeros((size, stim_dataset_frames.shape[1], stim_dataset_frames.shape[2]))
+    sta_counter = 0
+
+    for i, index in enumerate(indexes):
+        sta_counter += 1
+        for j, k in enumerate(range(index - (size - 1), index + 1)):
+            sta_frames[j] += stim_dataset_frames[k]
+
+     # STA plot
+    f, axarr = plt.subplots(sta_plot_rows, sta_plot_cols)
+    for i in range(sta_plot_rows):
+        for j in range(sta_plot_cols):
+            axarr[i, j].axis('off')
+
+    for i in range(size):
+        x = i // sta_plot_cols
+        y = i % sta_plot_cols
+        axarr[x, y].imshow(sta_frames[i], cmap='gray')
 
     plt.savefig(output_folder + name + '.pdf')
     plt.clf()

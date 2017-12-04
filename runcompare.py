@@ -19,7 +19,7 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_shapes = [(8, 64), (8, 192)]
+    layer_shapes = [(15, 64)]
     cell_target = 'cell_76'
 
     # Output folder

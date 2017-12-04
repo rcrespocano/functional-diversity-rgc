@@ -19,7 +19,7 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_name = 'MaxPool3d_2a_3x3'
+    layer_name = 'Conv3d_1a_7x7'
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
