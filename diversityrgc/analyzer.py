@@ -11,6 +11,7 @@ from . import ovndata
 from . import neuralnet
 from . import log
 from . import io_utils
+from . import filtertools
 
 # Logger
 logger = log.get_logger(__name__)
@@ -169,6 +170,45 @@ def analyze_principal_components(name=None, **kwargs):
         plt.title(folder)
         plt.savefig(output_folder + 'pca_' + str(_idx) + '.png')
         plt.clf()
+
+
+def save_feature_maps_sta_decomposed(**kwargs):
+    root_folder = kwargs['folder']
+    layer_name = kwargs['layer_name']
+    output_folder = kwargs['output_folder']
+
+    cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
+    num_feat_maps = 64
+    temp_size = 15
+    size = 112
+
+    for _idx, folder in enumerate(cell_folders):
+        files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
+                 and 'mean' not in f and layer_name in f]
+        files.sort(key=str.lower)
+        num_files = len(files)
+
+        for j in range(num_feat_maps):
+            sta = np.zeros((temp_size, size, size))
+            for i, f in enumerate(files):
+                data = np.load(folder + '/' + f)
+                name, _ = os.path.splitext(f)
+                base = os.path.basename(os.path.normpath(folder))
+                sta += data[0, :, :, :, j]
+
+            sta /= num_files
+            spatial_kernel, temporal_kernel = filtertools.decompose_sta(sta)
+
+            # Two subplots, the axes array is 1-d
+            f, axarr = plt.subplots(2)
+            axarr[0].set_title('STA Spatial Kernel')
+            axarr[0].imshow(spatial_kernel)
+            axarr[1].set_title('STA Temporal Kernel')
+            axarr[1].plot(np.arange(-data.shape[1] + 1, 1), temporal_kernel)
+            f.subplots_adjust(hspace=0.5)
+            plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
+            plt.clf()
+
 
 
 def __calculate_correlation(files, out_folder):
