@@ -45,7 +45,7 @@ class NeuralNet(object):
         self.model_predictions = tf.nn.softmax(self.model_logits)
 
     def run(self, stimulus, sv, output_folder, nspikes=None, start=0, center_range=(55, 56), save=False, gif=False,
-            gif_indexes=None):
+            gif_indexes=None, save_mean=False):
         with tf.Session() as sess:
             feed_dict = {}
             self.rgb_saver.restore(sess, self.checkpoint_path['rgb_imagenet'])
@@ -98,7 +98,9 @@ class NeuralNet(object):
                         units = units[0, :, center_range[0]:center_range[1]+1, center_range[0]:center_range[1]+1, :]
                         units = np.mean(units, axis=(1, 2))
                         np.save(filename, units)
-                        cell_filters[_idx][i] = units
+
+                        if save_mean:
+                            cell_filters[_idx][i] = units
 
                     if gif:
                         if gif_indexes is None:
@@ -109,7 +111,7 @@ class NeuralNet(object):
                         for u in _iterator:
                                 io_utils.generate_gif(filename + '_' + str(u) + '.gif', units[0, :, :, :, u], fps=30)
 
-            if save:
+            if save and save_mean:
                 for k, feature_map in enumerate(cell_filters):
                     fm = np.mean(feature_map, axis=0)
                     np.save(output_folder + 'mean_' + str(k), fm)
