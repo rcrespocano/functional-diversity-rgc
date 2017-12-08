@@ -22,7 +22,8 @@ def analyze(analyze_pcc=False, **kwargs):
     net = neuralnet.NeuralNet(temporal_size=kwargs['temporal_size'],
                               image_size=kwargs['neural_net_image_size'],
                               layer_names=kwargs['layer_names'],
-                              layer_shapes=kwargs['layer_shapes'])
+                              layer_shapes=kwargs['layer_shapes'],
+                              layer_sizes=kwargs['layer_sizes'])
     output_folder_root = kwargs['output_folder']
 
     for cell in kwargs['cells']:
@@ -37,7 +38,7 @@ def analyze(analyze_pcc=False, **kwargs):
         stim, sv = ovndata.load_data(**kwargs)
 
         # Run neural network
-        net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=True)
+        net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=False)
 
         if analyze_pcc:
             # Analyze data
@@ -209,6 +210,34 @@ def save_feature_maps_sta_decomposed(**kwargs):
             plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
             plt.clf()
 
+
+def save_feature_maps_sta(**kwargs):
+    root_folder = kwargs['folder']
+    layer_name = kwargs['layer_name']
+    output_folder = kwargs['output_folder']
+
+    cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
+
+    for _idx, folder in enumerate(cell_folders):
+        file = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
+                 and 'sta' in f and layer_name in f]
+        name, _ = os.path.splitext(file[0])
+        base = os.path.basename(os.path.normpath(folder))
+
+        # Load data
+        data = np.load(folder + '/' + file[0])
+        for j in range(data.shape[-1]):
+            spatial_kernel, temporal_kernel = filtertools.decompose_sta(data[0, :, :, :, j])
+
+            # Two subplots, the axes array is 1-d
+            f, axarr = plt.subplots(2)
+            axarr[0].set_title('STA Spatial Kernel')
+            axarr[0].imshow(spatial_kernel)
+            axarr[1].set_title('STA Temporal Kernel')
+            axarr[1].plot(np.arange(-data.shape[1] + 1, 1), temporal_kernel)
+            f.subplots_adjust(hspace=0.5)
+            plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
+            plt.clf()
 
 
 def __calculate_correlation(files, out_folder):

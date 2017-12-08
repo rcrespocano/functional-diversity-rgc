@@ -12,11 +12,12 @@ logger = log.get_logger(__name__)
 
 
 class NeuralNet(object):
-    def __init__(self, temporal_size, image_size, layer_names, layer_shapes):
+    def __init__(self, temporal_size, image_size, layer_names, layer_shapes, layer_sizes):
         self.temporal_size = temporal_size
         self.image_size = image_size
         self.layer_names = layer_names
         self.layer_shapes = layer_shapes
+        self.layer_sizes = layer_sizes
         self.video_length = int(temporal_size)
         self.num_classes = 400
         self.label_map_path = 'data/label_map.txt'
@@ -64,9 +65,10 @@ class NeuralNet(object):
             logger.info('Start simulation. Use each stimulus as input of the CNN.')
             cell_filters = [(np.zeros((nspikes,) + x)) for x in self.layer_shapes]
 
-            # STA
-            sta = np.zeros((self.temporal_size, self.image_size, self.image_size))
-            sta_counter = 0
+            # STAs
+            stas = []
+            for m in range(len(self.layer_shapes)):
+                stas.append(np.zeros((1, self.layer_shapes[m][0], self.layer_sizes[m], self.layer_sizes[m], self.layer_shapes[m][1])))
 
             for i, index in enumerate(indexes_spike):
                 # Current percentage
@@ -76,8 +78,6 @@ class NeuralNet(object):
                 video_file = np.zeros((self.video_length, self.image_size, self.image_size))
                 for j, k in enumerate(range(index - (self.temporal_size - 1), index + 1)):
                     video_file[j] = io_utils.enlarge_image(stimulus[k], self.image_size, self.image_size)
-                    sta[j] += video_file[j]
-                    sta_counter += 1
 
                 # Color dimension
                 video_file = video_file[..., np.newaxis] * np.ones(3)
@@ -94,7 +94,11 @@ class NeuralNet(object):
                     filename = output_folder + _layer + '_' + (str(i).zfill(6))
                     units = sess.run(self.model_endpoints[_layer], feed_dict=feed_dict)
 
+                    # Save sta
+                    stas[_idx] += units
+
                     if save:
+                        # Save all information
                         units = units[0, :, center_range[0]:center_range[1]+1, center_range[0]:center_range[1]+1, :]
                         units = np.mean(units, axis=(1, 2))
                         np.save(filename, units)
@@ -115,6 +119,12 @@ class NeuralNet(object):
                 for k, feature_map in enumerate(cell_filters):
                     fm = np.mean(feature_map, axis=0)
                     np.save(output_folder + 'mean_' + str(k), fm)
+
+            # STAs
+            stas = [sta/len(indexes_spike) for sta in stas]
+            for l, sta in enumerate(stas):
+                _sta = sta / len(indexes_spike)
+                np.save(output_folder + self.layer_names[l] + '_sta', _sta)
 
     def run_default_stim(self, gif_indexes, output_folder):
         # Load video file
