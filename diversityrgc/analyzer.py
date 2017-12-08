@@ -240,6 +240,36 @@ def save_feature_maps_sta(**kwargs):
             plt.clf()
 
 
+def save_feature_maps_sta_images(**kwargs):
+    root_folder = kwargs['folder']
+    layer_name = kwargs['layer_name']
+    output_folder = kwargs['output_folder']
+    rows = 4
+    cols = 4
+
+    cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
+
+    for _idx, folder in enumerate(cell_folders):
+        file = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
+                 and 'sta' in f and layer_name in f]
+        name, _ = os.path.splitext(file[0])
+        base = os.path.basename(os.path.normpath(folder))
+
+        # Load data
+        data = np.load(folder + '/' + file[0])
+        for j in range(data.shape[-1]):
+            _sta = data[0, :, :, :, j]
+
+            f, axarr = plt.subplots(rows, cols)
+            for i in range(_sta.shape[0]):
+                x = i // cols
+                y = i % cols
+                axarr[x, y].imshow(_sta[i])
+
+            plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
+            plt.clf()
+
+
 def __calculate_correlation(files, out_folder):
     pcc_size = np.load(out_folder + files[0]).shape[-1]
     pcc = np.zeros(pcc_size)
