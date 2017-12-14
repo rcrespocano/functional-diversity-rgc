@@ -24,12 +24,13 @@ if __name__ == '__main__':
     temporal_size = 30
     neural_net_image_size = 224
     number_of_spikes = None
-    layer_names = ['MaxPool3d_2a_3x3', 'Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
-    layer_shapes = [(15, 64), (15, 192), (15, 192)]
-    layer_sizes = [56, 56, 28]
+    layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
+    layer_shapes = [(15, 192), (15, 192)]
+    layer_sizes = [56, 28]
 
     # Output folder
-    output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
+    data_hd = '/media/retina/DATA/data/'
+    output_folder = data_hd + 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
     io_utils.create_folder(output_folder)
 
     # Info

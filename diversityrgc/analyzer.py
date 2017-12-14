@@ -38,7 +38,7 @@ def analyze(analyze_pcc=False, **kwargs):
         stim, sv = ovndata.load_data(**kwargs)
 
         # Run neural network
-        net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=False)
+        net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=True)
 
         if analyze_pcc:
             # Analyze data
@@ -122,6 +122,38 @@ def compare_correlated_filters(**kwargs):
         plt.clf()
 
 
+def compare_correlated_feature_maps(**kwargs):
+    folder = kwargs['folder']
+    output_folder = kwargs['output_folder']
+    layer_names = kwargs['layer_names']
+    layer_shapes = kwargs['layer_shapes']
+
+    # Files
+    _files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')]
+    _files.sort(key=str.lower)
+
+    for _idx, _layer in enumerate(layer_names):
+        _feature_maps = [x for x in _files if _layer in x]
+        _feature_maps.sort(key=str.lower)
+        _ncells = len(_feature_maps)
+        _ncombinations = __calculate_combinations(_ncells)
+        _pcc = np.zeros(layer_shapes[_idx][-1])
+        _counter = 0
+
+        for i in range(_ncells):
+            _data_i = np.load(folder + _feature_maps[i])[0, :, :, :, :]
+            for j in range(i+1, _ncells):
+                _data_j = np.load(folder + _feature_maps[j])[0, :, :, :, :]
+                _counter += 1
+                io_utils.print_progress_bar(_counter, _ncombinations, prefix='Progress:', suffix='Complete', length=50)
+
+                for k in range(layer_shapes[_idx][-1]):
+                    _pcc[k] += __pearsoncc(_data_i[:, :, :, k].flatten(), _data_j[:, :, :, k].flatten())
+
+        _pcc /= _ncombinations
+        __save_plot_pearsoncc(pcc=_pcc, output_folder=output_folder, name='pcc_' + str(_idx) + '.pdf')
+
+
 def plot_filters(title=True, **kwargs):
     folder = kwargs['folder']
     output_folder = kwargs['output_folder']
@@ -151,6 +183,7 @@ def analyze_principal_components(name=None, **kwargs):
     root_folder = kwargs['folder']
     layer_name = kwargs['layer_name']
     output_folder = kwargs['output_folder']
+    layer_feature_maps = kwargs['layer_feature_maps']
 
     cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
 
@@ -159,18 +192,113 @@ def analyze_principal_components(name=None, **kwargs):
                  and 'mean' not in f and layer_name in f]
         files.sort(key=str.lower)
 
-        for i, f in enumerate(files):
-            data = np.load(folder + '/' + f)
-            pca = PCA(2)
-            projected = pca.fit_transform(data.T)
-            plt.scatter(projected[:, 0], projected[:, 1])
-            plt.title(f)
+        for j in range(layer_feature_maps):
+            logger.info('Feature map %s', j)
+
+            for i, f in enumerate(files):
+                data = np.load(folder + '/' + f)
+                data = data[0, :, :, :, j]
+                data_norm = (data - data.min()) / (data.max() - data.min())
+                data_norm = data_norm.reshape((data_norm.shape[0], -1))
+
+                # PCA
+                pca = PCA(n_components=2)
+                projected = pca.fit_transform(data_norm)
+                plt.scatter(projected[:, 0], projected[:, 1])
+
             plt.xlabel('Component 1')
             plt.ylabel('Component 2')
+            plt.title(folder)
+            plt.savefig(output_folder + 'pca_' + str(_idx) + '_' + str(j) + '.png')
+            plt.clf()
 
-        plt.title(folder)
-        plt.savefig(output_folder + 'pca_' + str(_idx) + '.png')
+
+def analyze_principal_components_space_reduction(name=None, **kwargs):
+    folder = kwargs['folder']
+    output_folder = kwargs['output_folder']
+    layer_names = kwargs['layer_names']
+    layer_shapes = kwargs['layer_shapes']
+    layer_centers = kwargs['layer_centers']
+    _plot_pca = True
+    '''
+    _group_limit = 15
+    rows = 3
+    cols = 5
+    '''
+
+    # Files
+    _files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')]
+    _files.sort(key=str.lower)
+
+    for _idx, _layer in enumerate(layer_names):
+        logger.info('> Layer %s', _layer)
+        _feature_maps = [x for x in _files if _layer in x]
+        _feature_maps.sort(key=str.lower)
+        _n = len(_feature_maps)
+        _all_fm = np.zeros((_n, layer_shapes[_idx][0] * layer_shapes[_idx][3]))
+        '''
+        # _sta_group_a = np.zeros((layer_shapes[_idx][0], layer_shapes[_idx][1], layer_shapes[_idx][2]))
+        # _sta_group_b = np.zeros((layer_shapes[_idx][0], layer_shapes[_idx][1], layer_shapes[_idx][2]))
+        # _group_counters = [0, 0]
+        '''
+
+        for _i, _fm in enumerate(_feature_maps):
+            io_utils.print_progress_bar(_i, _n, prefix='Progress:', suffix='Complete', length=50)
+
+            # Load feature maps from single spike
+            _data = np.load(folder + '/' + _fm)
+            _reduced_data = _data[0, :, layer_centers[_idx][0]:layer_centers[_idx][1]+1,
+                                  layer_centers[_idx][0]:layer_centers[_idx][1] + 1, :]
+            _reduced_data = np.mean(_reduced_data, axis=(1, 2))
+            _all_fm[_i] = _reduced_data.flatten()
+
+            '''
+            # Calculate the STA for the two groups
+            # group_a_idx = np.where(projected[:, 0] < _group_limit)[0]
+            # group_b_idx = np.where(projected[:, 0] >= _group_limit)[0]
+            
+            for _index in group_a_idx:
+                _sta_group_a += _data[0, :, :, :, _index]
+                _group_counters[0] += 1
+
+            for _index in group_b_idx:
+                _sta_group_b += _data[0, :, :, :, _index]
+                _group_counters[1] += 1
+            '''
+
+        if _plot_pca:
+            # Calculate PCA
+            pca = PCA(n_components=2)
+            projected = pca.fit_transform(_all_fm)
+            plt.scatter(projected[:, 0], projected[:, 1])
+            plt.title('[PCA] ' + _layer)
+            plt.xlabel('Component 1')
+            plt.ylabel('Component 2')
+            plt.savefig(output_folder + 'pca_' + _layer + '.pdf')
+            plt.clf()
+
+        '''
+        # STA
+        _sta_group_a /= _group_counters[0]
+        _sta_group_b /= _group_counters[1]
+
+        f, axarr = plt.subplots(rows, cols)
+        for i in range(_sta_group_a.shape[0]):
+            x = i // cols
+            y = i % cols
+            axarr[x, y].imshow(_sta_group_a[i])
+
+        plt.savefig(output_folder + 'sta-' + _layer + '-' + 'a' + '.pdf')
         plt.clf()
+        f, axarr = plt.subplots(rows, cols)
+        for i in range(_sta_group_b.shape[0]):
+            x = i // cols
+            y = i % cols
+            axarr[x, y].imshow(_sta_group_b[i])
+
+        plt.savefig(output_folder + 'sta-' + _layer + '-' + 'b' + '.pdf')
+        plt.clf()
+        '''
 
 
 def save_feature_maps_sta_decomposed(**kwargs):

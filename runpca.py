@@ -19,8 +19,9 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_name = 'Conv3d_2c_3x3'
-    layer_feature_maps = 192
+    layer_shapes = [(15, 56, 56, 192), (15, 28, 28, 192)]
+    layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
+    layer_centers = [(27, 28), (13, 14)]
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -48,11 +49,12 @@ if __name__ == '__main__':
     kwargs = dict()
     kwargs['folder'] = args.folder
     kwargs['output_folder'] = output_folder
-    kwargs['layer_name'] = layer_name
-    kwargs['layer_feature_maps'] = layer_feature_maps
+    kwargs['layer_shapes'] = layer_shapes
+    kwargs['layer_names'] = layer_names
+    kwargs['layer_centers'] = layer_centers
 
-    # Analyze decomposition
-    analyzer.analyze_principal_components(**kwargs)
+    # Compare correlated filters
+    analyzer.analyze_principal_components_space_reduction(**kwargs)
 
     diff_time = time.time() - start_time
     logger.info('The simulation has been successfully completed.')

@@ -99,8 +99,8 @@ class NeuralNet(object):
 
                     if save:
                         # Save all information
-                        units = units[0, :, center_range[0]:center_range[1]+1, center_range[0]:center_range[1]+1, :]
-                        units = np.mean(units, axis=(1, 2))
+                        # units = units[0, :, center_range[0]:center_range[1]+1, center_range[0]:center_range[1]+1, :]
+                        # units = np.mean(units, axis=(1, 2))
                         np.save(filename, units)
 
                         if save_mean:

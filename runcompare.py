@@ -19,8 +19,8 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_shapes = [(15, 64)]
-    cell_target = 'cell_76'
+    layer_shapes = [(15, 192), (15, 192)]
+    layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -49,11 +49,10 @@ if __name__ == '__main__':
     kwargs['folder'] = args.folder
     kwargs['output_folder'] = output_folder
     kwargs['layer_shapes'] = layer_shapes
-    kwargs['cell_target'] = cell_target
+    kwargs['layer_names'] = layer_names
 
     # Compare correlated filters
-    analyzer.compare_correlated_filters(**kwargs)
-    analyzer.plot_filters(**kwargs)
+    analyzer.compare_correlated_feature_maps(**kwargs)
 
     diff_time = time.time() - start_time
     logger.info('The simulation has been successfully completed.')
