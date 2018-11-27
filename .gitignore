@@ -1,5 +1,6 @@
-# PyCharm
+# PyCharm & Spyder
 .idea/*
+.spyproject/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
