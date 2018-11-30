@@ -63,73 +63,6 @@ def analyze(analyze_pcc=False, **kwargs):
         del sv, mean, stim
 
 
-def compare_correlated_filters(**kwargs):
-    folder = kwargs['folder']
-    output_folder = kwargs['output_folder']
-    layer_shapes = kwargs['layer_shapes']
-    cell_target = kwargs['cell_target']
-    rows = 2
-    cols = 2
-
-    cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0] and cell_target not in x[0]]
-    cell_folders.sort(key=str.lower)
-    cell_target_folder = [x[0] for x in os.walk(folder) if 'cell' in x[0] and cell_target in x[0]]
-    num_cells = len(cell_folders) + 1
-    num_combinations = __calculate_combinations(num_cells)
-    logger.info('Cell folders')
-    logger.info(cell_folders)
-    logger.info('Cell target')
-    logger.info(cell_target_folder)
-
-    # Save correlation of all filters
-    logger.info('Save correlation of all filters')
-    for _idx, layer_shape in enumerate(layer_shapes):
-        mean_file = 'mean_' + str(_idx) + '.npy'
-        logger.info('Mean file %s', mean_file)
-
-        data = np.empty((num_cells,) + layer_shape)
-        data[0] = np.load(cell_target_folder[0] + '/' + mean_file)
-        for i in range(1, num_cells):
-            logger.info('> Data i=' + str(i) + ' --> ' + cell_folders[i-1])
-            data[i] = np.load(cell_folders[i-1] + '/' + mean_file)
-
-        pcc = np.empty(data.shape[-1])
-        for k in range(data.shape[-1]):
-            _pcc = 0.0
-            for n in range(num_cells):
-                _x = data[n, :, k]
-                for m in range(n+1, num_cells):
-                    _y = data[m, :, k]
-                    _pcc += __pearsoncc(_x, _y)
-
-            pcc[k] = _pcc / num_combinations
-
-        __save_plot_pearsoncc(pcc=pcc, output_folder=output_folder, name='pcc_all_filters_' + str(_idx) + '.pdf')
-
-        # Save correlation only with the target cell
-        logger.info('Save correlation only with the target cell')
-        pcc_values = np.empty((num_cells-1,) + (data.shape[-1],))
-        for n in range(1, num_cells):
-            for k in range(data.shape[-1]):
-                _x = data[0, :, k]
-                _y = data[n, :, k]
-                pcc_values[n-1][k] = __pearsoncc(data[0, :, k], data[n, :, k])
-
-        logger.info('PCC less than 0.5')
-        for i in range(len(pcc_values)):
-            logger.info('Comparison %s', i)
-            logger.info(np.where([pcc_values[i] < 0.5])[1])
-
-        f, axarr = plt.subplots(rows, cols)
-        for i in range(pcc_values.shape[0]):
-            x_axis = np.arange(pcc_values[i].size)
-            x = i // cols
-            y = i % cols
-            axarr[x, y].bar(x_axis, pcc_values[i])
-        plt.savefig(output_folder + 'pcc_in_pairs_' + str(_idx) + '.pdf')
-        plt.clf()
-
-
 def compare_correlated_feature_maps(**kwargs):
     root_folder = kwargs['folder']
     output_folder = kwargs['output_folder']
@@ -448,7 +381,74 @@ def __calculate_combinations(n_elements):
     return misc.comb(n_elements, 2)
 
 
-def __deprecated_compare_correlated_filters(**kwargs):
+def _deprecated_compare_correlated_filters(**kwargs):
+    folder = kwargs['folder']
+    output_folder = kwargs['output_folder']
+    layer_shapes = kwargs['layer_shapes']
+    cell_target = kwargs['cell_target']
+    rows = 2
+    cols = 2
+
+    cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0] and cell_target not in x[0]]
+    cell_folders.sort(key=str.lower)
+    cell_target_folder = [x[0] for x in os.walk(folder) if 'cell' in x[0] and cell_target in x[0]]
+    num_cells = len(cell_folders) + 1
+    num_combinations = __calculate_combinations(num_cells)
+    logger.info('Cell folders')
+    logger.info(cell_folders)
+    logger.info('Cell target')
+    logger.info(cell_target_folder)
+
+    # Save correlation of all filters
+    logger.info('Save correlation of all filters')
+    for _idx, layer_shape in enumerate(layer_shapes):
+        mean_file = 'mean_' + str(_idx) + '.npy'
+        logger.info('Mean file %s', mean_file)
+
+        data = np.empty((num_cells,) + layer_shape)
+        data[0] = np.load(cell_target_folder[0] + '/' + mean_file)
+        for i in range(1, num_cells):
+            logger.info('> Data i=' + str(i) + ' --> ' + cell_folders[i-1])
+            data[i] = np.load(cell_folders[i-1] + '/' + mean_file)
+
+        pcc = np.empty(data.shape[-1])
+        for k in range(data.shape[-1]):
+            _pcc = 0.0
+            for n in range(num_cells):
+                _x = data[n, :, k]
+                for m in range(n+1, num_cells):
+                    _y = data[m, :, k]
+                    _pcc += __pearsoncc(_x, _y)
+
+            pcc[k] = _pcc / num_combinations
+
+        __save_plot_pearsoncc(pcc=pcc, output_folder=output_folder, name='pcc_all_filters_' + str(_idx) + '.pdf')
+
+        # Save correlation only with the target cell
+        logger.info('Save correlation only with the target cell')
+        pcc_values = np.empty((num_cells-1,) + (data.shape[-1],))
+        for n in range(1, num_cells):
+            for k in range(data.shape[-1]):
+                _x = data[0, :, k]
+                _y = data[n, :, k]
+                pcc_values[n-1][k] = __pearsoncc(data[0, :, k], data[n, :, k])
+
+        logger.info('PCC less than 0.5')
+        for i in range(len(pcc_values)):
+            logger.info('Comparison %s', i)
+            logger.info(np.where([pcc_values[i] < 0.5])[1])
+
+        f, axarr = plt.subplots(rows, cols)
+        for i in range(pcc_values.shape[0]):
+            x_axis = np.arange(pcc_values[i].size)
+            x = i // cols
+            y = i % cols
+            axarr[x, y].bar(x_axis, pcc_values[i])
+        plt.savefig(output_folder + 'pcc_in_pairs_' + str(_idx) + '.pdf')
+        plt.clf()
+
+
+def __deprecated_compare_correlated_filters_old(**kwargs):
     folder = kwargs['folder']
     layer_name = kwargs['layer_name']
     spikes = kwargs['spikes']
