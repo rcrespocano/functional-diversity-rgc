@@ -329,71 +329,48 @@ def analyze_principal_components_space_reduction(name=None, **kwargs):
             '''
 
 
+def save_sta_graphs(**kwargs):
+    logger.info('Save feature maps STA decomposed')
+    save_feature_maps_sta_decomposed(**kwargs)
+
+    logger.info('Save feature maps STA decomposed')
+    save_feature_maps_sta_images(**kwargs)
+
+
 def save_feature_maps_sta_decomposed(**kwargs):
     root_folder = kwargs['folder']
-    layer_name = kwargs['layer_name']
+    layer_names = kwargs['layer_names']
     output_folder = kwargs['output_folder']
 
     cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
-    num_feat_maps = 64
-    temp_size = 15
-    size = 112
 
     for _idx, folder in enumerate(cell_folders):
-        files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
-                 and 'mean' not in f and layer_name in f]
-        files.sort(key=str.lower)
-        num_files = len(files)
+        logger.info('Folder: %s', folder)
 
-        for j in range(num_feat_maps):
-            sta = np.zeros((temp_size, size, size))
-            for i, f in enumerate(files):
-                data = np.load(folder + '/' + f)
-                name, _ = os.path.splitext(f)
+        try:
+            for layer in layer_names:
+                file = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
+                         and 'sta' in f and layer in f]
+                name, _ = os.path.splitext(file[0])
                 base = os.path.basename(os.path.normpath(folder))
-                sta += data[0, :, :, :, j]
 
-            sta /= num_files
-            spatial_kernel, temporal_kernel = filtertools.decompose_sta(sta)
+                # Load data
+                data = np.load(folder + '/' + file[0])
+                for j in range(data.shape[-1]):
+                    spatial_kernel, temporal_kernel = filtertools.decompose_sta(data[0, :, :, :, j])
 
-            # Two subplots, the axes array is 1-d
-            f, axarr = plt.subplots(2)
-            axarr[0].set_title('STA Spatial Kernel')
-            axarr[0].imshow(spatial_kernel)
-            axarr[1].set_title('STA Temporal Kernel')
-            axarr[1].plot(np.arange(-data.shape[1] + 1, 1), temporal_kernel)
-            f.subplots_adjust(hspace=0.5)
-            plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
-            plt.clf()
-
-
-def save_feature_maps_sta(**kwargs):
-    root_folder = kwargs['folder']
-    layer_name = kwargs['layer_name']
-    output_folder = kwargs['output_folder']
-
-    cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
-
-    for _idx, folder in enumerate(cell_folders):
-        file = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
-                 and 'sta' in f and layer_name in f]
-        name, _ = os.path.splitext(file[0])
-        base = os.path.basename(os.path.normpath(folder))
-
-        # Load data
-        data = np.load(folder + '/' + file[0])
-        for j in range(data.shape[-1]):
-            spatial_kernel, temporal_kernel = filtertools.decompose_sta(data[0, :, :, :, j])
-
-            # Two subplots, the axes array is 1-d
-            f, axarr = plt.subplots(2)
-            axarr[0].set_title('STA Spatial Kernel')
-            axarr[0].imshow(spatial_kernel)
-            axarr[1].set_title('STA Temporal Kernel')
-            axarr[1].plot(np.arange(-data.shape[1] + 1, 1), temporal_kernel)
-            f.subplots_adjust(hspace=0.5)
-            plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
-            plt.clf()
+                    # Two subplots, the axes array is 1-d
+                    f, axarr = plt.subplots(2)
+                    axarr[0].set_title('STA Spatial Kernel')
+                    axarr[0].imshow(spatial_kernel)
+                    axarr[1].set_title('STA Temporal Kernel')
+                    axarr[1].plot(np.arange(-data.shape[1] + 1, 1), temporal_kernel)
+                    f.subplots_adjust(hspace=0.5)
+                    plt.savefig(output_folder + base + '-' + name + '_dec_' + str(j) + '_' + '.png')
+                    plt.clf()
+                    plt.close('all')
+        except:
+            pass
 
 
 def save_feature_maps_sta_images(**kwargs):
@@ -412,13 +389,11 @@ def save_feature_maps_sta_images(**kwargs):
             for layer in layer_names:
                 file = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
                          and '_sta' in f and layer in f]
-                print(file)
                 name, _ = os.path.splitext(file[0])
                 base = os.path.basename(os.path.normpath(folder))
 
                 # Load data
                 data = np.load(folder + '/' + file[0])
-                logger.info('Shape: %s', data.shape)
 
                 for j in range(data.shape[-1]):
                     _sta = data[0, :, :, :, j]
@@ -431,6 +406,7 @@ def save_feature_maps_sta_images(**kwargs):
 
                     plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
                     plt.clf()
+                    plt.close('all')
         except:
             pass
 
@@ -472,7 +448,7 @@ def __calculate_combinations(n_elements):
     return misc.comb(n_elements, 2)
 
 
-def __old_deprecated_compare_correlated_filters(**kwargs):
+def __deprecated_compare_correlated_filters(**kwargs):
     folder = kwargs['folder']
     layer_name = kwargs['layer_name']
     spikes = kwargs['spikes']
@@ -504,3 +480,41 @@ def __old_deprecated_compare_correlated_filters(**kwargs):
         __save_plot_pearsoncc(pcc=output[index], output_folder=output_folder, name='pcc_filter_' + str(filter) + '.pdf')
 
     return output
+
+
+def __deprecated_save_feature_maps_sta_decomposed(**kwargs):
+    root_folder = kwargs['folder']
+    layer_name = kwargs['layer_name']
+    output_folder = kwargs['output_folder']
+
+    cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
+    num_feat_maps = 64
+    temp_size = 15
+    size = 112
+
+    for _idx, folder in enumerate(cell_folders):
+        files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')
+                 and 'mean' not in f and layer_name in f]
+        files.sort(key=str.lower)
+        num_files = len(files)
+
+        for j in range(num_feat_maps):
+            sta = np.zeros((temp_size, size, size))
+            for i, f in enumerate(files):
+                data = np.load(folder + '/' + f)
+                name, _ = os.path.splitext(f)
+                base = os.path.basename(os.path.normpath(folder))
+                sta += data[0, :, :, :, j]
+
+            sta /= num_files
+            spatial_kernel, temporal_kernel = filtertools.decompose_sta(sta)
+
+            # Two subplots, the axes array is 1-d
+            f, axarr = plt.subplots(2)
+            axarr[0].set_title('STA Spatial Kernel')
+            axarr[0].imshow(spatial_kernel)
+            axarr[1].set_title('STA Temporal Kernel')
+            axarr[1].plot(np.arange(-data.shape[1] + 1, 1), temporal_kernel)
+            f.subplots_adjust(hspace=0.5)
+            plt.savefig(output_folder + base + '-' + name + '_' + str(j) + '_' + '.png')
+            plt.clf()

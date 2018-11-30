@@ -50,7 +50,7 @@ if __name__ == '__main__':
     kwargs['layer_names'] = layer_names
 
     # Analyze decomposition
-    analyzer.save_feature_maps_sta_images(**kwargs)
+    analyzer.save_sta_graphs(**kwargs)
 
     diff_time = time.time() - start_time
     logger.info('The simulation has been successfully completed.')
