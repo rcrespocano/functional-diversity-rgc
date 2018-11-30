@@ -151,90 +151,47 @@ def analyze_principal_components_space_reduction(name=None, **kwargs):
     layer_shapes = kwargs['layer_shapes']
     layer_centers = kwargs['layer_centers']
     _plot_pca = True
-    '''
-    _group_limit = 15
-    rows = 3
-    cols = 5
-    '''
 
     cell_folders = [x[0] for x in os.walk(root_folder) if 'cell' in x[0]]
 
     for _idx, folder in enumerate(cell_folders):
         logger.info('Folder: %s', folder)
+        base = os.path.basename(os.path.normpath(folder))
 
-        # Files
-        _files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')]
-        _files.sort(key=str.lower)
+        try:
+            # Files
+            _files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith('.npy')]
+            _files.sort(key=str.lower)
 
-        for _idx, _layer in enumerate(layer_names):
-            logger.info('> Layer %s', _layer)
-            _feature_maps = [x for x in _files if _layer in x]
-            _feature_maps.sort(key=str.lower)
-            _n = len(_feature_maps)
-            _all_fm = np.zeros((_n, layer_shapes[_idx][0] * layer_shapes[_idx][3]))
-            '''
-            # _sta_group_a = np.zeros((layer_shapes[_idx][0], layer_shapes[_idx][1], layer_shapes[_idx][2]))
-            # _sta_group_b = np.zeros((layer_shapes[_idx][0], layer_shapes[_idx][1], layer_shapes[_idx][2]))
-            # _group_counters = [0, 0]
-            '''
+            for _idx, _layer in enumerate(layer_names):
+                logger.info('> Layer %s', _layer)
+                _feature_maps = [x for x in _files if _layer in x]
+                _feature_maps.sort(key=str.lower)
+                _n = len(_feature_maps)
+                _all_fm = np.zeros((_n, layer_shapes[_idx][0] * layer_shapes[_idx][3]))
 
-            for _i, _fm in enumerate(_feature_maps):
-                io_utils.print_progress_bar(_i, _n, prefix='Progress:', suffix='Complete', length=50)
+                for _i, _fm in enumerate(_feature_maps):
+                    io_utils.print_progress_bar(_i, _n, prefix='Progress:', suffix='Complete', length=50)
 
-                # Load feature maps from single spike
-                _data = np.load(folder + '/' + _fm)
-                _reduced_data = _data[0, :, layer_centers[_idx][0]:layer_centers[_idx][1]+1,
-                                      layer_centers[_idx][0]:layer_centers[_idx][1] + 1, :]
-                _reduced_data = np.mean(_reduced_data, axis=(1, 2))
-                _all_fm[_i] = _reduced_data.flatten()
+                    # Load feature maps from single spike
+                    _data = np.load(folder + '/' + _fm)
+                    _reduced_data = _data[0, :, layer_centers[_idx][0]:layer_centers[_idx][1]+1,
+                                          layer_centers[_idx][0]:layer_centers[_idx][1] + 1, :]
+                    _reduced_data = np.mean(_reduced_data, axis=(1, 2))
+                    _all_fm[_i] = _reduced_data.flatten()
 
-                '''
-                # Calculate the STA for the two groups
-                # group_a_idx = np.where(projected[:, 0] < _group_limit)[0]
-                # group_b_idx = np.where(projected[:, 0] >= _group_limit)[0]
-
-                for _index in group_a_idx:
-                    _sta_group_a += _data[0, :, :, :, _index]
-                    _group_counters[0] += 1
-
-                for _index in group_b_idx:
-                    _sta_group_b += _data[0, :, :, :, _index]
-                    _group_counters[1] += 1
-                '''
-
-            if _plot_pca:
-                # Calculate PCA
-                pca = PCA(n_components=2)
-                projected = pca.fit_transform(_all_fm)
-                plt.scatter(projected[:, 0], projected[:, 1])
-                plt.title('[PCA] ' + _layer)
-                plt.xlabel('Component 1')
-                plt.ylabel('Component 2')
-                plt.savefig(output_folder + 'pca_' + _layer + '.pdf')
-                plt.clf()
-
-            '''
-            # STA
-            _sta_group_a /= _group_counters[0]
-            _sta_group_b /= _group_counters[1]
-
-            f, axarr = plt.subplots(rows, cols)
-            for i in range(_sta_group_a.shape[0]):
-                x = i // cols
-                y = i % cols
-                axarr[x, y].imshow(_sta_group_a[i])
-
-            plt.savefig(output_folder + 'sta-' + _layer + '-' + 'a' + '.pdf')
-            plt.clf()
-            f, axarr = plt.subplots(rows, cols)
-            for i in range(_sta_group_b.shape[0]):
-                x = i // cols
-                y = i % cols
-                axarr[x, y].imshow(_sta_group_b[i])
-
-            plt.savefig(output_folder + 'sta-' + _layer + '-' + 'b' + '.pdf')
-            plt.clf()
-            '''
+                if _plot_pca:
+                    # Calculate PCA
+                    pca = PCA(n_components=2)
+                    projected = pca.fit_transform(_all_fm)
+                    plt.scatter(projected[:, 0], projected[:, 1])
+                    plt.title('[PCA] ' + _layer)
+                    plt.xlabel('Component 1')
+                    plt.ylabel('Component 2')
+                    plt.savefig(output_folder + 'pca_' + base + '_' + _layer + '.pdf')
+                    plt.clf()
+        except:
+            pass
 
 
 def save_sta_graphs(**kwargs):
