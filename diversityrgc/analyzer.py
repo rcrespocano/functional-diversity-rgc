@@ -239,13 +239,13 @@ def analyze_principal_components_space_reduction(name=None, **kwargs):
 
 def save_sta_graphs(**kwargs):
     logger.info('Save feature maps STA decomposed')
-    save_feature_maps_sta_decomposed(**kwargs)
+    __save_feature_maps_sta_decomposed(**kwargs)
 
     logger.info('Save feature maps STA decomposed')
-    save_feature_maps_sta_images(**kwargs)
+    __save_feature_maps_sta_images(**kwargs)
 
 
-def save_feature_maps_sta_decomposed(**kwargs):
+def __save_feature_maps_sta_decomposed(**kwargs):
     root_folder = kwargs['folder']
     layer_names = kwargs['layer_names']
     output_folder = kwargs['output_folder']
@@ -281,7 +281,7 @@ def save_feature_maps_sta_decomposed(**kwargs):
             pass
 
 
-def save_feature_maps_sta_images(**kwargs):
+def __save_feature_maps_sta_images(**kwargs):
     root_folder = kwargs['folder']
     layer_names = kwargs['layer_names']
     output_folder = kwargs['output_folder']
@@ -356,7 +356,7 @@ def __calculate_combinations(n_elements):
     return misc.comb(n_elements, 2)
 
 
-def _deprecated_plot_filters(title=True, **kwargs):
+def __deprecated_plot_filters(title=True, **kwargs):
     folder = kwargs['folder']
     output_folder = kwargs['output_folder']
     layer_shapes = kwargs['layer_shapes']
@@ -381,7 +381,7 @@ def _deprecated_plot_filters(title=True, **kwargs):
         plt.clf()
 
 
-def _deprecated_compare_correlated_filters(**kwargs):
+def __deprecated_compare_correlated_filters(**kwargs):
     folder = kwargs['folder']
     output_folder = kwargs['output_folder']
     layer_shapes = kwargs['layer_shapes']
