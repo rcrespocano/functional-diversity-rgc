@@ -24,11 +24,9 @@ class NeuralNet(object):
         self.checkpoint_path = {'rgb_imagenet': 'data/checkpoints/rgb_imagenet/model.ckpt'}
         self.flags = tf.flags.FLAGS
         self.eval_type = 'rgb'
-
         tf.flags.DEFINE_string('eval_type', 'joint', 'rgb, flow, or joint')
         tf.flags.DEFINE_boolean('imagenet_pretrained', True, '')
         tf.logging.set_verbosity(tf.logging.INFO)
-        self.imagenet_pretrained = self.flags.imagenet_pretrained
 
         # RGB input has 3 channels.
         self.rgb_input = tf.placeholder(tf.float32, shape=(1, self.video_length, self.image_size, self.image_size, 3))
@@ -58,6 +56,7 @@ class NeuralNet(object):
 
             # Number of spikes
             nspikes = len(indexes_spike) if nspikes is None else nspikes
+            logger.info('Number of spikes: %s', nspikes)
 
             # Range
             indexes_spike = indexes_spike[start:start + nspikes]

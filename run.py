@@ -23,13 +23,13 @@ if __name__ == '__main__':
     frame_size = 56
     temporal_size = 30
     neural_net_image_size = 224
-    number_of_spikes = None
+    number_of_spikes = 100
     layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
     layer_shapes = [(15, 192), (15, 192)]
     layer_sizes = [56, 28]
 
     # Output folder
-    data_hd = '/media/retina/DATA/data/'
+    data_hd = ''
     output_folder = data_hd + 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
     io_utils.create_folder(output_folder)
 
@@ -37,12 +37,12 @@ if __name__ == '__main__':
     info = 'Functional caracterization of retinal ganglion cell diversity tool.'
 
     parser = argparse.ArgumentParser(description=info)
-    parser.add_argument('--stim', metavar='stim', type=str, nargs='?', help='Input stimulus dataset')
+    parser.add_argument('--stimuli', metavar='stimuli', type=str, nargs='?', help='Input stimulus dataset')
     parser.add_argument('--bio', metavar='bio', type=str, nargs='?', help='Input biological data')
     parser.add_argument('--cells', metavar='cells', nargs='+', help='Cells (type,num)')
     args = parser.parse_args()
 
-    if args.stim is None:
+    if args.stimuli is None:
         raise TypeError('ERROR: the arg --stim is mandatory [Input stimulus dataset]')
     if args.bio is None:
         raise TypeError('ERROR: the arg --bio is mandatory [Input biological dat]')
@@ -57,13 +57,13 @@ if __name__ == '__main__':
     logger.info(info)
 
     logger.info('Parameters:')
-    logger.info('> stim: %s', args.stim)
+    logger.info('> stim: %s', args.stimuli)
     logger.info('> bio: %s', args.bio)
     logger.info('> cells: %s', args.cells)
 
     # Parameters
     kwargs = dict()
-    kwargs['stim_dataset'] = args.stim
+    kwargs['stim_dataset'] = args.stimuli
     kwargs['bio_dataset'] = args.bio
     kwargs['cells'] = args.cells
     kwargs['trigger_frames'] = trigger_frames

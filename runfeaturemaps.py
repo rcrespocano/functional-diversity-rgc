@@ -19,7 +19,7 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     # Parameters
-    layer_name = 'Conv3d_1a_7x7'
+    layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
 
     # Output folder
     output_folder = 'output/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     kwargs = dict()
     kwargs['folder'] = args.folder
     kwargs['output_folder'] = output_folder
-    kwargs['layer_name'] = layer_name
+    kwargs['layer_names'] = layer_names
 
     # Analyze decomposition
     analyzer.save_feature_maps_sta_images(**kwargs)

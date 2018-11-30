@@ -23,8 +23,10 @@ MEAN_KEY = 'mean'
 logger = log.get_logger(__name__)
 
 
-def load_data(**kwargs):
+def load_stim(**kwargs):
     stim_dataset = kwargs['stim_dataset']
+    sv = kwargs['sv']
+    mean = kwargs['mean']
     frame_size = kwargs['frame_size']
     temporal_size = kwargs['temporal_size']
     output_folder = kwargs['output_folder']
@@ -36,21 +38,14 @@ def load_data(**kwargs):
         stim_dataset_frames = f[DATASET_KEY][:]
         logger.info('Stimulus dataset raw (shape): %s', stim_dataset_frames.shape)
 
-    # Get spike vector of cell
-    sv, mean = get_spike_vector(**kwargs)
-
     # Stimulus dataset (reduce to the size of the spike vector)
     stim_dataset_frames = stim_dataset_frames[:sv.shape[0]]
 
     # Crop frames (reduce to the receptive field zone of the cell)
-    logger.info('Reduce frame to the receptive field zone of the cell')
+    logger.info('Reduce frame to the receptive field zone of the cell and normalize [-1, 1]')
     dataset_cropped_frames = np.zeros((stim_dataset_frames.shape[0], frame_size, frame_size))
     for i in range(dataset_cropped_frames.shape[0]):
-        dataset_cropped_frames[i] = crop_frame(stim_dataset_frames[i], mean, subframe_size)
-
-    # Normalize
-    logger.info('Normalize stimulus between -1 and 1')
-    dataset_cropped_frames = (2 * dataset_cropped_frames.astype('float32') / 255.0) - 1
+        dataset_cropped_frames[i] = (2 * crop_frame(stim_dataset_frames[i], mean, subframe_size) / 255.0) - 1
 
     # Save STA
     try:
@@ -60,7 +55,17 @@ def load_data(**kwargs):
     except Exception:
         pass
 
-    return dataset_cropped_frames, sv
+    del stim_dataset_frames
+    return dataset_cropped_frames
+
+
+def load_spike_vector(**kwargs):
+    logger.info('Load spike vector.')
+
+    # Get spike vector of cell
+    sv, mean = get_spike_vector(**kwargs)
+    logger.info('Spike vector size: %s', sv.size)
+    return sv, mean
 
 
 def get_spike_vector(**kwargs):
