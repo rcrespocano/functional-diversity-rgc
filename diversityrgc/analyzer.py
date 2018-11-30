@@ -101,31 +101,6 @@ def compare_correlated_feature_maps(**kwargs):
                                   name='pcc_' + os.path.basename(folder) + '_' + _layer + '.pdf')
 
 
-def plot_filters(title=True, **kwargs):
-    folder = kwargs['folder']
-    output_folder = kwargs['output_folder']
-    layer_shapes = kwargs['layer_shapes']
-
-    cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0]]
-    cell_folders.sort(key=str.lower)
-
-    for _idx, _ in enumerate(layer_shapes):
-        f, axarr = plt.subplots(nrows=len(cell_folders), ncols=1)
-        for i, f in enumerate(cell_folders):
-            filename = f + '/mean_' + str(_idx) + '.npy'
-            data = np.load(filename)
-            logger.info('> Load filename %s', filename)
-
-            if title:
-                axarr[i].set_title(f)
-            axarr[i].axis('off')
-            axarr[i].imshow(data)
-            plt.imshow(data)
-
-        plt.savefig(output_folder + 'filters_colormap_' + str(_idx) + '.pdf')
-        plt.clf()
-
-
 def analyze_principal_components(name=None, **kwargs):
     root_folder = kwargs['folder']
     layer_names = kwargs['layer_names']
@@ -379,6 +354,31 @@ def __pearsoncc(x, y):
 
 def __calculate_combinations(n_elements):
     return misc.comb(n_elements, 2)
+
+
+def _deprecated_plot_filters(title=True, **kwargs):
+    folder = kwargs['folder']
+    output_folder = kwargs['output_folder']
+    layer_shapes = kwargs['layer_shapes']
+
+    cell_folders = [x[0] for x in os.walk(folder) if 'cell' in x[0]]
+    cell_folders.sort(key=str.lower)
+
+    for _idx, _ in enumerate(layer_shapes):
+        f, axarr = plt.subplots(nrows=len(cell_folders), ncols=1)
+        for i, f in enumerate(cell_folders):
+            filename = f + '/mean_' + str(_idx) + '.npy'
+            data = np.load(filename)
+            logger.info('> Load filename %s', filename)
+
+            if title:
+                axarr[i].set_title(f)
+            axarr[i].axis('off')
+            axarr[i].imshow(data)
+            plt.imshow(data)
+
+        plt.savefig(output_folder + 'filters_colormap_' + str(_idx) + '.pdf')
+        plt.clf()
 
 
 def _deprecated_compare_correlated_filters(**kwargs):
