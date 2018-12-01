@@ -21,6 +21,8 @@ YADLRETINA requires the following Python packages:
 * TensorFlow
 * Sonnet
 * kinetics-i3d
+* opencv
+* imageio
 
 This repository is usually tested on GNU/Linux on Python 3.6
 
