@@ -9,3 +9,8 @@ __pycache__/
 # Output folder
 output/
 
+# Setup
+build/
+dist/
+diversityrgc.egg-info/
+
