@@ -2,7 +2,7 @@
 
 ![fdrgc logo](img/logo.png)
 
-This repository contains a tool for functional caracterization of retinal ganglion cells.
+This repository contains tools to analyze retinal ganglion cells through transfer learning.
 
 
 ### License
