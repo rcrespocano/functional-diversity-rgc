@@ -44,7 +44,7 @@ def analyze(analyze_pcc=False, **kwargs):
         stim = ovndata.load_stim(**kwargs)
 
         # Run neural network
-        net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=True)
+        net.run(stim, sv, out_folder, nspikes=kwargs['number_of_spikes'], start=0, save=False)
 
         if analyze_pcc:
             # Analyze data
@@ -198,7 +198,7 @@ def save_sta_graphs(**kwargs):
     logger.info('Save feature maps STA decomposed')
     __save_feature_maps_sta_decomposed(**kwargs)
 
-    logger.info('Save feature maps STA decomposed')
+    logger.info('Save feature maps STA')
     __save_feature_maps_sta_images(**kwargs)
 
 
