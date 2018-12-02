@@ -10,19 +10,19 @@ This program is free software; you can redistribute it and/or modify it under th
 
 
 ### Requirements
-YADLRETINA requires the following Python packages:
+This repository requires the following Python packages:
 
 * NumPy
 * SciPy
 * matplotlib
 * h5py
 * sklearn
+* opencv
+* imageio
 * Keras
 * TensorFlow
 * Sonnet
 * kinetics-i3d
-* opencv
-* imageio
 
 This repository is usually tested on GNU/Linux on Python 3.6
 
