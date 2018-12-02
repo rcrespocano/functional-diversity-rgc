@@ -2,6 +2,7 @@
 
 import sys
 import os
+import random
 import time
 import argparse
 import datetime
@@ -12,13 +13,14 @@ from diversityrgc import log, analyzer, io_utils
 logger = log.get_logger(__name__)
 
 def run(folder):
-# Parameters
+    # Parameters
     layer_shapes = [(15, 56, 56, 192), (15, 28, 28, 192)]
     layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
     layer_centers = [(27, 28), (13, 14)]
 
     # Output folder
-    output_folder = 'output/pca-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
+    _dt = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    output_folder = 'output/pca-' + _dt + '-' + str(random.randint(1,1000)) + '/'
     io_utils.create_folder(output_folder)
 
     # Logger
@@ -36,7 +38,6 @@ def run(folder):
     kwargs['layer_names'] = layer_names
     kwargs['layer_centers'] = layer_centers
 
-    # Compare correlated filters
     analyzer.analyze_principal_components_space_reduction(**kwargs)
 
 

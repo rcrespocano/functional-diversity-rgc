@@ -2,6 +2,7 @@
 
 import sys
 import os
+import random
 import time
 import argparse
 import datetime
@@ -29,7 +30,8 @@ if __name__ == '__main__':
     layer_sizes = [56, 28]
 
     # Output folder
-    output_folder = 'output/run-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
+    _dt = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    output_folder = 'output/run-' + _dt + '-' + str(random.randint(1,1000)) + '/'
     io_utils.create_folder(output_folder)
 
     # Info
