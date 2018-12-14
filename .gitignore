@@ -14,3 +14,10 @@ build/
 dist/
 diversityrgc.egg-info/
 
+# sh files
+*.sh
+
+# Log files
+*.out
+*.err
+
