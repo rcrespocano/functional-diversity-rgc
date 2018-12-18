@@ -25,6 +25,7 @@ if __name__ == '__main__':
     temporal_size = 30
     neural_net_image_size = 224
     number_of_spikes = None
+    # Layers: Conv3d_2c_3x3 -> (1, 15, 56, 56, 192) and MaxPool3d_3a_3x3 -> (1, 15, 28, 28, 192)
     layer_names = ['Conv3d_2c_3x3', 'MaxPool3d_3a_3x3']
     layer_shapes = [(15, 192), (15, 192)]
     layer_sizes = [56, 28]
